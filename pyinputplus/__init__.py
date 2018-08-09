@@ -239,11 +239,11 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
                 strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-                numbered=False, lettered=False, caseSensitive=False):
+                caseSensitive=False):
 
     # Validate the arguments passed to pysv.validateChoice().
     pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes,
-                   numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
+                   numbered=False, lettered=False, caseSensitive=caseSensitive)
 
     validationFunc = lambda value: pysv.validateChoice(value, choices=choices, blank=blank,
                     strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, numbered=False, lettered=False,
@@ -266,8 +266,8 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
                    numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
     validationFunc = lambda value: pysv.validateChoice(value, choices=choices, blank=blank,
-                    strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, numbered=False, lettered=False,
-                    caseSensitive=False)
+                    strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes,
+                    numbered=numbered, lettered=lettered, caseSensitive=False)
 
     if prompt == '_default':
         prompt = 'Please select one of the following:\n'
@@ -279,9 +279,15 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
             prompt += '\n'.join(['* ' + choice for choice in choices])
         prompt += '\n'
 
-    return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
-                         limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+    result = _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
+                           limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
+                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+    # Since `result` could be a number or letter of the option selected, we
+    # need to find the string in `choices` to return. Call pysv.validateChoice()
+    # again to get it.
+    return pysv.validateChoice(result, choices, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes,
+                   numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
 
 def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, limit=None,

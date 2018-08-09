@@ -48,6 +48,24 @@ Example Usage
     >>> result
     'cat'
 
+    >>> result = inputMenu(['dog', 'cat', 'moose'])
+    Please select one of the following:
+    * dog
+    * cat
+    * moose
+    DoG
+    >>> result
+    'dog'
+
+    >>> result = inputMenu(['dog', 'cat', 'moose'], lettered=True, numbered=False)
+    Please select one of the following:
+    A. dog
+    B. cat
+    C. moose
+    b
+    >>> result
+    'cat'
+
 Common Input Function Parameters
 ================================
 
