@@ -1,5 +1,13 @@
-# PyInputPlus
-# By Al Sweigart
+"""PyInputPlus
+By Al Sweigart al@inventwithpython.com
+
+A Python 2 and 3 module to provide input()- and raw_input()-like functions with additional validation features.
+
+This module relies heavily on PySimpleValidate (also by Al) for the actual
+validation. PyInputPlus provides interaction with the user through stdin/stdout
+while PySimpleValidate provides the functions that validate the user's input.
+"""
+
 from __future__ import absolute_import, division, print_function
 
 import time
@@ -40,6 +48,21 @@ class MetaDataEntry(object):
 """
 
 def _checkLimitAndTimeout(default, startTime, timeout, tries, limit):
+    """Returns the default argument if the user has timed out or exceeded the
+    limit for number of responses. If default is None and the user has timed
+    out/exceeded the limit, a TimeoutException or RetryLimitException is raised,
+    respectively.
+
+    if the user enters valid input, but has exceeded the time limit, the user's input is discarded and `default` or `None` is returned.
+
+    Args:
+        `default` (str): A string to return as the user input if the user has timed out/exceeded the limit.
+        `startTime` (float): The Unix epoch time when the input function was first called.
+        `timeout` (float): A number of seconds the user has to enter valid input.
+        `tries` (int): The number of times the user has already tried to enter valid input.
+        `limit` (int): The number of tries the user has to enter valid input.
+    """
+
     # Check if the user has timed out.
 
     # NOTE: We return exceptions instead of raising them so the caller
@@ -60,8 +83,28 @@ def _checkLimitAndTimeout(default, startTime, timeout, tries, limit):
 
 
 def _genericInput(prompt='', default=None, blank=False, timeout=None, limit=None,
-                  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-                  validationFunc=None, preamble=None):
+                  strip=True, whitelistRegexes=None, blacklistRegexes=None,
+                  applyFunc=None, validationFunc=None, postValidateApplyFunc=None):
+    """This function is used by the various input*() functions to handle the
+    common operations of each input function: displaying prompts, collecting input,
+    handling timeouts, etc.
+
+    See the input*() functions for examples of usage.
+
+    Args:
+        `prompt` (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's `raw_input()` and `input()` functions.
+        `default` (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+        `blank` (bool): If `True`, blank strings will be allowed as valid user input.
+        `timeout` (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+        `limit` (int): The number of tries the user has to enter valid input before the default value is returned.
+        `strip` (bool, str, None): If `True`, whitespace is stripped from `value`. If a str, the characters in it are stripped from value. If `None`, nothing is stripped. Defaults to `True`.
+        `whitelistRegexes` (Sequence, None): A sequence of regex str that will explicitly pass validation, even if they aren't numbers. Defaults to `None`.
+        `blacklistRegexes` (Sequence, None): A sequence of regex str or (regex_str, response_str) tuples that, if matched, will explicitly fail validation. Defaults to `None`.
+        `applyFunc` (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+        `validationFunc` (Callable): A function that is passed the user's input value, which raises an exception if the input isn't valid. (The return value of this function is ignored.)
+        `postValidateApplyFunc` (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    """
+
     # NOTE: _genericInput() always returns a string. Any type casting must be done by the caller.
 
     # Validate the parameters.
@@ -88,10 +131,6 @@ def _genericInput(prompt='', default=None, blank=False, timeout=None, limit=None
 
     while True:
         # Get the user input.
-        #import pdb;pdb.set_trace()
-        if preamble is not None:
-            print(preamble, end=''
-                )
         print(prompt, end='')
         userInput = input()
         assert userInput is not None
@@ -136,8 +175,11 @@ def _genericInput(prompt='', default=None, blank=False, timeout=None, limit=None
 
 def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
              strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-    def validationFunc(value):
-        return pysv._handleBlankValues(value, blank=blank, strip=strip) in (True, None)
+
+    # Validate the arguments passed to pysv.validateNum().
+    pysv._validateGenericParameters(blank, strip, whitelistRegexes, blacklistRegexes)
+
+    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -151,14 +193,11 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
-    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='num') in (True, None)
+    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='num')
 
     result = _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                            limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
                            postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-    if whitelistRegexes is not None and result in whitelistRegexes:
-        return result
 
     if '.' in result:
         return float(result)
@@ -173,14 +212,11 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
-    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='int') in (True, None)
+    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='int')
 
     result = _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                            limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
                            postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-    if whitelistRegexes is not None and result in whitelistRegexes:
-        return result
 
     return int(float(result)) # In case result is a string like '3.2', convert to float first.
 
@@ -192,67 +228,60 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
-    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='float') in (True, None)
+    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='float')
 
     result = _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
-                         limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-    if whitelistRegexes is not None and result in whitelistRegexes:
-        return result
+                           limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
+                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
     return float(result)
 
 
-def inputChoice(choices, prompt='', default=None, blank=False, timeout=None, limit=None,
+def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
                 strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-                preamble='_default', numbered=False, lettered=False, caseSensitive=False):
+                numbered=False, lettered=False, caseSensitive=False):
 
     # Validate the arguments passed to pysv.validateChoice().
     pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes,
                    numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
-    def validationFunc(value):
-        return pysv.validateChoice(value, choices=choices, blank=blank,
+    validationFunc = lambda value: pysv.validateChoice(value, choices=choices, blank=blank,
                     strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, numbered=False, lettered=False,
                     caseSensitive=False)
 
-    if preamble == '_default':
-        preamble = 'Please select one of: %s.\n' % (', '.join(choices))
+    if prompt == '_default':
+        prompt = 'Please select one of: %s.\n' % (', '.join(choices))
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc,
-                         preamble=preamble)
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
-def inputMenu(choices, prompt='', default=None, blank=False, timeout=None, limit=None,
-                strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-                preamble='_default', numbered=False, lettered=False, caseSensitive=False):
+def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
+              strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+              numbered=False, lettered=False, caseSensitive=False):
 
     # Validate the arguments passed to pysv.validateChoice().
     pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes,
                    numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
-    def validationFunc(value):
-        return pysv.validateChoice(value, choices=choices, blank=blank,
+    validationFunc = lambda value: pysv.validateChoice(value, choices=choices, blank=blank,
                     strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, numbered=False, lettered=False,
                     caseSensitive=False)
 
-    if preamble == '_default':
-        preamble = 'Please select one of the following:\n'
+    if prompt == '_default':
+        prompt = 'Please select one of the following:\n'
         if numbered:
-            preamble += '\n'.join([str(i + 1) + '. ' + choices[i] for i in range(len(choices))])
+            prompt += '\n'.join([str(i + 1) + '. ' + choices[i] for i in range(len(choices))])
         elif lettered:
-            preamble += '\n'.join([chr(65 + i) + '. ' + choices[i] for i in range(len(choices))])
+            prompt += '\n'.join([chr(65 + i) + '. ' + choices[i] for i in range(len(choices))])
         else:
-            preamble += '\n'.join(['* ' + choice for choice in choices])
-        preamble += '\n'
+            prompt += '\n'.join(['* ' + choice for choice in choices])
+        prompt += '\n'
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc,
-                         preamble=preamble)
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
 def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, limit=None,
@@ -261,9 +290,7 @@ def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, 
     if formats is None:
         formats = ('%m/%d/%Y', '%m/%d/%y', '%Y/%m/%d', '%y/%m/%d', '%x')
 
-    def validationFunc(value):
-        return pysv.validateDate(value, blank=blank, strip=strip,
-                                 whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, formats=formats)
+    validationFunc = lambda value: pysv.validateDate(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, formats=formats)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -276,9 +303,7 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
                    '%m/%d/%Y %H:%M', '%m/%d/%y %H:%M', '%Y/%m/%d %H:%M', '%y/%m/%d %H:%M', '%x %H:%M',
                    '%m/%d/%Y %H:%M:%S', '%m/%d/%y %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%y/%m/%d %H:%M:%S', '%x %H:%M:%S')):
 
-    def validationFunc(value):
-        return pysv.validateDatetime(value, blank=blank, strip=strip,
-                                     whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, formats=formats)
+    validationFunc = lambda value: pysv.validateDatetime(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, formats=formats)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -289,9 +314,7 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
 			  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 			  formats=('%H:%M:%S', '%H:%M', '%X')):
 
-    def validationFunc(value):
-        return pysv.validateTime(value, blank=blank, strip=strip,
-                                 whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, formats=formats)
+    validationFunc = lambda value: pysv.validateTime(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, formats=formats)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -302,9 +325,7 @@ def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None
 				  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 				  mustExist=False):
 
-    def validationFunc(value):
-        return pysv.validateFilename(value, blank=blank, strip=strip,
-                                     whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
+    validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -315,9 +336,7 @@ def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None
 				  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 				  mustExist=False):
 
-    def validationFunc(value):
-        return pysv.validateFilepath(value, blank=blank, strip=strip,
-                                     whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
+    validationFunc = lambda value: pysv.validateFilepath(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -327,9 +346,7 @@ def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None
 def inputIpAddr(prompt='', default=None, blank=False, timeout=None, limit=None,
 				strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validateIpAddr(value, blank=blank, strip=strip,
-                                   whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateIpAddr(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -339,9 +356,7 @@ def inputIpAddr(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=None, limit=None,
 			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validateRegex(value, regex='', flags=0,
-        				blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateRegex(value, regex='', flags=0, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -351,9 +366,7 @@ def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=Non
 def inputLiteralRegex(prompt='', default=None, blank=False, timeout=None, limit=None,
 				      strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validateRegex(value, blank=blank, strip=strip,
-                                  whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateRegex(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -363,10 +376,7 @@ def inputLiteralRegex(prompt='', default=None, blank=False, timeout=None, limit=
 def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
 		     strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validateURL(value, blank=blank, strip=strip,
-                                whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
-
+    validationFunc = lambda value: pysv.validateURL(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -377,9 +387,7 @@ def inputYesNo(prompt='', yes='yes', no='no', caseSensitive=False,
 			   default=None, blank=False, timeout=None, limit=None,
 			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validateYesNo(value, yes=yes, no=no, caseSensitive=caseSensitive,
-        						blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateYesNo(value, yes=yes, no=no, caseSensitive=caseSensitive, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     result = _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -389,34 +397,18 @@ def inputYesNo(prompt='', yes='yes', no='no', caseSensitive=False,
 
 def inputName(prompt='', default=None, blank=False, timeout=None, limit=None,
 			  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-
-    def validationFunc(value):
-        return pysv.validateName(value, blank=blank, strip=strip,
-                                 whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
-
-    return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
-                         limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+    raise NotImplementedError()
 
 
 def inputAddress(prompt='', default=None, blank=False, timeout=None, limit=None,
 				 strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-
-    def validationFunc(value):
-        return pysv.validateAddress(value, blank=blank, strip=strip,
-                                    whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
-
-    return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
-                         limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+    raise NotImplementedError()
 
 
 def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
 			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validateState(value, blank=blank, strip=strip,
-                                  whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -426,9 +418,7 @@ def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
 		     strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validateZip(value, blank=blank, strip=strip,
-                                whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateZip(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
@@ -438,9 +428,7 @@ def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputPhone(prompt='', default=None, blank=False, timeout=None, limit=None,
 			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    def validationFunc(value):
-        return pysv.validatePhone(value, blank=blank, strip=strip,
-                                  whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validatePhone(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, blank=blank, timeout=timeout,
                          limit=limit, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, applyFunc=applyFunc,
