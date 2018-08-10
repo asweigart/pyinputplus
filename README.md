@@ -1,6 +1,14 @@
 # PyInputPlus
 
-A Python 2 and 3 module to provide input()- and raw_input()-like functions with additional validation features.
+A Python 2 and 3 module to provide input()- and raw_input()-like functions with additional validation features, including:
+
+* Re-prompting the user if they enter invalid input.
+* Validating for numeric, boolean, date, time, or yes/no responses.
+* Timeouts or retry limits for user responses.
+* Specifying regexes for whitelists or blacklists of responses.
+* Specifying ranges for numeric inputs.
+* Presenting menus with bulleted, lettered, or numbered options.
+* Allowing case-sensitive or case-insensitive responses.
 
 Installation
 ============
@@ -90,9 +98,10 @@ Input Functions
 * `inputNum()` - Accepts a numeric number. Additionally has `min` and `max` parameters for inclusive bounds and `greaterThan` and `lessThan` parameters for exclusive bounds. Returns an int or float, not a str.
 * `inputInt()` - Accepts an integer number. Also has `min`/`max`/`greaterThan`/`lessThan` parameters. Returns an int, not a str.
 * `inputFloat()` - Accepts a floating-point number. Also has `min`/`max`/`greaterThan`/`lessThan` parameters. Returns a float, not a str.
+* `inputBool()` - Accepts a case-insensitive form of `'True'`, `'T'`, `'False'`, or `'F'` and returns a bool value.
 * `inputChoice()` - Accepts one of the strings in the list of strings passed for its `choices` parameter.
 * `inputMenu()` - Similar to `inputChoice()`, but will also present the choices in a menu with 1, 2, 3... or A, B, C... options if `numbered` or `lettered` are set to `True`.
-* `inputDate()` - Accepts a date typed in one of the `strftime` formats passed to the `formats` parameter. (This has several common formats by default.)
-* `inputDatetime()` - Same as `inputDate()`, except it handles dates and times. (This has several common formats by default.)
-* `inputTime()` - Same as `inputDate()`, except it handles times. (This has several common formats by default.)
-* `inputYesNo()` - Accepts `yes` or `no` response, with flexible variation (case-insensitive, `y`, `n`, etc.)
+* `inputDate()` - Accepts a date typed in one of the `strftime` formats passed to the `formats` parameter. (This has several common formats by default.) Returns a `datetime.date` object.
+* `inputDatetime()` - Same as `inputDate()`, except it handles dates and times. (This has several common formats by default.) Returns a `datetime.datetime` object.
+* `inputTime()` - Same as `inputDate()`, except it handles times. (This has several common formats by default.) Returns a `datetime.time` object.
+* `inputYesNo()` - Accepts a case-insensitive form of `'Yes'`, `'Y'`, `'No'`, or `'N'` and returns `'yes'` or `'no'`.

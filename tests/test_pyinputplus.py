@@ -10,8 +10,9 @@ import threading
 
 import pyautogui
 
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-import pyinputplus
+import pyinputplus as pyip
 
 
 class TypewriteThread(threading.Thread):
@@ -23,14 +24,19 @@ class TypewriteThread(threading.Thread):
 
 
     def run(self):
-        time.sleep(0.1)
+        time.sleep(0.1) # Slight pause to give the other thread a chance to run the input*() function.
         pyautogui.typewrite(self.msg, self.interval)
 
 
-# Start the tests.
-TypewriteThread('hello\n')
-assert pyinputplus.inputStr() == 'hello'
+def test_inputStr():
+    # Test typical usage.
+    TypewriteThread('hello\n')
+    assert pyip.inputStr() == 'hello'
 
-TypewriteThread('\nhello\n')
-assert pyinputplus.inputStr() == 'hello'
+
+
+
+if __name__ == '__main__':
+    test_inputStr()
+
 
