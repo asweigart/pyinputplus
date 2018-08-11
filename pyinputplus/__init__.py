@@ -395,34 +395,6 @@ def inputDayOfMonth(prompt='', default=None, blank=False, timeout=None, limit=No
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
-
-
-
-
-
-
-def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None,
-				  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-				  mustExist=False):
-
-    validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
-
-    return _genericInput(prompt=prompt, default=default, timeout=timeout,
-                         limit=limit, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-
-def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None,
-				  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-				  mustExist=False):
-
-    validationFunc = lambda value: pysv.validateFilepath(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
-
-    return _genericInput(prompt=prompt, default=default, timeout=timeout,
-                         limit=limit, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-
 def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
 				strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
@@ -436,7 +408,7 @@ def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=None, limit=None,
 			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    validationFunc = lambda value: pysv.validateRegex(value, regex='', flags=0, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateRegex(value, regex=regex, flags=flags, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -517,6 +489,10 @@ def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 
+
+
+
+# TODO - Finish the following
 def inputName(prompt='', default=None, blank=False, timeout=None, limit=None,
 			  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
@@ -530,3 +506,29 @@ def inputAddress(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputPhone(prompt='', default=None, blank=False, timeout=None, limit=None,
 			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
+
+
+def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None,
+                  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+                  mustExist=False):
+    raise NotImplementedError()
+
+    validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
+def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None,
+                  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+                  mustExist=False):
+    raise NotImplementedError()
+
+    validationFunc = lambda value: pysv.validateFilepath(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, mustExist=mustExist)
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
