@@ -355,6 +355,52 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
+def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
+               strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+
+    validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
+def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
+               strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+
+    validationFunc = lambda value: pysv.validateMonth(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
+def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=None,
+                   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+
+    validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
+def inputDayOfMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
+                    strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+
+    validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
+
+
+
+
+
+
 def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None,
 				  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 				  mustExist=False):
@@ -377,10 +423,10 @@ def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
-def inputIpAddr(prompt='', default=None, blank=False, timeout=None, limit=None,
+def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
 				strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
-    validationFunc = lambda value: pysv.validateIpAddr(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv.validateIp(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -434,7 +480,6 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
     return pysv.validateYesNo(result, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
 
-
 def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
                default=None, blank=False, timeout=None, limit=None,
                strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
@@ -459,6 +504,19 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
     else:
         return result # Return `result` if a blank or whitelisted value was entered, or postValidateApplyFunc() transformed the value.
 
+
+def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
+             strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+
+    validationFunc = lambda value: pysv.validateRegex(value, regex=r'(\d){3,5}(-\d\d\d\d)?', blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, excMsg='That is not a valid zip code.')
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
+
+
 def inputName(prompt='', default=None, blank=False, timeout=None, limit=None,
 			  strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
@@ -469,36 +527,6 @@ def inputAddress(prompt='', default=None, blank=False, timeout=None, limit=None,
     raise NotImplementedError()
 
 
-def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
-			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-
-    validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
-
-    return _genericInput(prompt=prompt, default=default, timeout=timeout,
-                         limit=limit, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-
-def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
-		     strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-
-    validationFunc = lambda value: pysv.validateZip(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
-
-    return _genericInput(prompt=prompt, default=default, timeout=timeout,
-                         limit=limit, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-
 def inputPhone(prompt='', default=None, blank=False, timeout=None, limit=None,
 			   strip=True, whitelistRegexes=None, blacklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-
-    validationFunc = lambda value: pysv.validatePhone(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
-
-    return _genericInput(prompt=prompt, default=default, timeout=timeout,
-                         limit=limit, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-
-#if __name__ == '__main__':
-#    import doctest
-#    doctest.testmod()
+    raise NotImplementedError()
