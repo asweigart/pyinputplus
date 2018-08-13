@@ -77,6 +77,8 @@ Example Usage
 Common Input Function Parameters
 ================================
 
+All input functions have the following parameters:
+
 * `prompt` (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's `raw_input()` and `input()` functions. Default
 * `default` (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
 * `blank` (bool): If `True`, blank strings will be allowed as valid user input.

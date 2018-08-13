@@ -466,15 +466,8 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
                            postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
     # If the user entered a response that is compatible with trueVal or falseVal exactly, get those particular exact strings.
-    result = pysv.validateYesNo(result, yesVal=trueVal, noVal=falseVal, caseSensitive=caseSensitive, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    return pysv.validateBool(result, yesVal=trueVal, noVal=falseVal, caseSensitive=caseSensitive, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
 
-    # Return a bool value instead of a string.
-    if result == trueVal:
-        return True
-    elif result == falseVal:
-        return False
-    else:
-        return result # Return `result` if a blank or whitelisted value was entered, or postValidateApplyFunc() transformed the value.
 
 
 def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
