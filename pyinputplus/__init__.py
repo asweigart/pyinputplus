@@ -17,7 +17,7 @@ import time
 import pysimplevalidate as pysv
 
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 FUNC_TYPE = type(lambda x: x)
 METHOD_DESCRIPTOR_TYPE = type(str.upper)
@@ -176,7 +176,7 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateGenericParameters(blank, strip, whitelistRegexes, blacklistRegexes)
 
-    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes)
+    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, whitelistRegexes=whitelistRegexes, blacklistRegexes=blacklistRegexes, excMsg=None)
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,

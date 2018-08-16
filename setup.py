@@ -2,7 +2,7 @@ import re
 from setuptools import setup
 
 # Load version from module (without loading the whole module)
-with open('pyautogui/__init__.py', 'r') as fd:
+with open('pyinputplus/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
@@ -22,7 +22,7 @@ setup(
     license='BSD',
     packages=['pyinputplus'],
     test_suite='tests',
-    install_requires=[],
+    install_requires=['pysimplevalidate'],
     keywords="input validation text gui message box",
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -39,9 +39,9 @@ setup(
         'Programming Language :: Python :: 3.1',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4'
-        'Programming Language :: Python :: 3.5'
-        'Programming Language :: Python :: 3.6'
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 )
