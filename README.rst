@@ -1,4 +1,5 @@
-# PyInputPlus
+PyInputPlus
+===========
 
 A Python 2 and 3 module to provide input()- and raw_input()-like functions with additional validation features, including:
 
@@ -11,12 +12,12 @@ A Python 2 and 3 module to provide input()- and raw_input()-like functions with 
 * Allowing case-sensitive or case-insensitive responses.
 
 Installation
-============
+------------
 
     pip install pyinputplus
 
 Example Usage
-=============
+-------------
 
     >>> import pyinputplus as pyip
     >>> result = pyip.inputStr()
@@ -75,7 +76,7 @@ Example Usage
     'cat'
 
 Common Input Function Parameters
-================================
+--------------------------------
 
 All input functions have the following parameters:
 
@@ -94,7 +95,7 @@ All input functions have the following parameters:
 Other input functions may have additional parameters.
 
 Input Functions
-===============
+---------------
 
 * `inputStr()` - Accepts a string. Use this if you basically want Python's `input()` or `raw_input()`, but with PyInputPlus features such as whitelist/blacklist, timeouts, limits, etc.
 * `inputNum()` - Accepts a numeric number. Additionally has `min` and `max` parameters for inclusive bounds and `greaterThan` and `lessThan` parameters for exclusive bounds. Returns an int or float, not a str.
