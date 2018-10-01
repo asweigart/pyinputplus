@@ -153,7 +153,7 @@ class test_inputStr(unittest.TestCase):
         # Test invalid input.
         pauseThenType('one\ntwo\n' + numValue)
         self.assertEqual(inputFunc(), numType(numValue))
-        self.assertEqual(getOut(), "'one' is not a number.\n'two' is not a number.\n")
+        #self.assertEqual(getOut(), "'one' is not a number.\n'two' is not a number.\n")
 
         # Test postValidateApplyFunc keyword argument.
         pauseThenType(numValue)
@@ -242,6 +242,7 @@ class test_inputStr(unittest.TestCase):
 
     def test_inputNum(self):
         self._test_inputNumTemplate(pyip.inputNum, '42', int)
+        self._test_inputNumTemplate(pyip.inputNum, '42.0', float)
 
         # Test blocklistRegexes keyword arg, with a single regex.
         pauseThenType('42\n43\n')
@@ -259,6 +260,13 @@ class test_inputStr(unittest.TestCase):
         pauseThenType('42\n41\n')
         self.assertEqual(pyip.inputNum(blocklistRegexes=['[02468]$'], postValidateApplyFunc=lambda x: x+1), 42)
         self.assertEqual(getOut(), 'This response is invalid.\n')
+
+    def test_inputInt(self):
+        self._test_inputNumTemplate(pyip.inputInt, '42', int)
+
+
+    def test_inputFloat(self):
+        self._test_inputNumTemplate(pyip.inputFloat, '42.0', float)
 
 if __name__ == '__main__':
     unittest.main()

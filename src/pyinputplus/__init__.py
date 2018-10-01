@@ -194,10 +194,9 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
 
     validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)[1]
 
-    result = _genericInput(prompt=prompt, default=default, timeout=timeout,
-                           limit=limit, applyFunc=applyFunc,
-                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-    return result
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
 def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
@@ -244,8 +243,8 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
     validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='num')
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
-                           limit=limit, applyFunc=applyFunc,
-                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
 
@@ -260,9 +259,18 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
-                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+                           validationFunc=validationFunc)
 
-    return int(float(result)) # In case result is a string like '3.2', convert to float first.
+    try:
+        result = int(float(result))
+    except ValueError:
+        # In case _genericInput() returned the default value or an allowlist value, return that as is instead.
+        pass
+
+    if postValidateApplyFunc is None:
+        return result
+    else:
+        return postValidateApplyFunc(result)
 
 
 def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
@@ -276,9 +284,18 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
-                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+                           validationFunc=validationFunc)
 
-    return float(result)
+    try:
+        result = float(result)
+    except ValueError:
+        # In case _genericInput() returned the default value or an allowlist value, return that as is instead.
+        pass
+
+    if postValidateApplyFunc is None:
+        return result
+    else:
+        return postValidateApplyFunc(result)
 
 
 def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
@@ -325,13 +342,18 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
-                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+                           validationFunc=validationFunc)
 
     # Since `result` could be a number or letter of the option selected, we
     # need to find the string in `choices` to return. Call pysv.validateChoice()
     # again to get it.
-    return pysv.validateChoice(result, choices, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
-                   numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
+    result = pysv.validateChoice(result, choices, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
+                                 numbered=numbered, lettered=lettered,
+                                 caseSensitive=caseSensitive)
+    if postValidateApplyFunc is None:
+        return result
+    else:
+        return postValidateApplyFunc(result)
 
 
 def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, limit=None,
@@ -462,10 +484,15 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
-                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+                           validationFunc=validationFunc)
 
     # If validation passes, return the value that pysv.validateYesNo() returned rather than necessarily what the user typed in.
-    return pysv.validateYesNo(result, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    result = pysv.validateYesNo(result, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+
+    if postValidateApplyFunc is None:
+        return result
+    else:
+        return postValidateApplyFunc(result)
 
 
 def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
@@ -479,11 +506,15 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
-                           postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+                           validationFunc=validationFunc)
 
     # If the user entered a response that is compatible with trueVal or falseVal exactly, get those particular exact strings.
-    return pysv.validateBool(result, yesVal=trueVal, noVal=falseVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    result = pysv.validateBool(result, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
+    if postValidateApplyFunc is None:
+        return result
+    else:
+        return postValidateApplyFunc(result)
 
 
 def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
@@ -494,11 +525,6 @@ def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-
-
-
-
-
 
 
 # TODO - Finish the following
