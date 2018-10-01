@@ -107,11 +107,11 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
         raise PyInputPlusException('timeout argument must be an int or float')
     if not isinstance(limit, (int, type(None))):
         raise PyInputPlusException('limit argument must be an int')
-    if not isinstance(validationFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE)):
+    if not isinstance(validationFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type)):
         raise PyInputPlusException('validationFunc argument must be a function')
-    if not isinstance(applyFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type(None))):
+    if not isinstance(applyFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type(None), type)):
         raise PyInputPlusException('applyFunc argument must be a function or None')
-    if not isinstance(postValidateApplyFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type(None))):
+    if not isinstance(postValidateApplyFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type(None), type)):
         raise PyInputPlusException('postValidateApplyFunc argument must be a function or None')
 
     startTime = time.time()
