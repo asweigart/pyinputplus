@@ -143,91 +143,105 @@ class test_inputStr(unittest.TestCase):
         self.assertEqual(getOut(), '')
 
 
-    def test_inputNum(self):
+    def _test_inputNumTemplate(self, inputFunc, numValue, numType):
+        numValue += '\n'
         # Test typical usage.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(), 42)
-        self.assertEqual(getOut(), '')
-
-        pauseThenType('42.0\n')
-        self.assertEqual(pyip.inputNum(), 42.0)
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(), numType(numValue))
         self.assertEqual(getOut(), '')
 
         # Test invalid input.
-        pauseThenType('one\ntwo\n42\n')
-        self.assertEqual(pyip.inputNum(), 42)
+        pauseThenType('one\ntwo\n' + numValue)
+        self.assertEqual(inputFunc(), numType(numValue))
         self.assertEqual(getOut(), "'one' is not a number.\n'two' is not a number.\n")
 
         # Test postValidateApplyFunc keyword argument.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(postValidateApplyFunc=str), '42')
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(postValidateApplyFunc=str), str(numType(numValue)))
         self.assertEqual(getOut(), '')
 
         # Test prompt keyword arg.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum('Prompt>'), 42)
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc('Prompt>'), numType(numValue))
         self.assertEqual(getOut(), 'Prompt>')
 
         # Test default keyword arg with retry limit keyword arg.
         pauseThenType('\n\n')
-        self.assertEqual(pyip.inputNum(default='def', limit=2), 'def')
+        self.assertEqual(inputFunc(default='def', limit=2), 'def')
         self.assertEqual(getOut(), 'Blank values are not allowed.\nBlank values are not allowed.\n')
 
         # Test default keyword arg with timeout keyword arg.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(default='def', timeout=0.01), 'def')
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(default='def', timeout=0.01), 'def')
         self.assertEqual(getOut(), '')
 
         # Test retry limit with no default value.
         with self.assertRaises(pyip.RetryLimitException):
             pauseThenType('\n\n')
-            pyip.inputNum(limit=2)
+            inputFunc(limit=2)
         self.assertEqual(getOut(), 'Blank values are not allowed.\nBlank values are not allowed.\n')
 
         # Test timeout limit with no default value, entering valid input.
         with self.assertRaises(pyip.TimeoutException):
-            pauseThenType('42\n')
-            pyip.inputNum(timeout=0.01)
+            pauseThenType(numValue)
+            inputFunc(timeout=0.01)
         self.assertEqual(getOut(), '')
 
         # Test timeout limit with no default value, entering invalid input.
         with self.assertRaises(pyip.TimeoutException):
             pauseThenType('\n')
-            pyip.inputNum(timeout=0.01)
+            inputFunc(timeout=0.01)
         self.assertEqual(getOut(), 'Blank values are not allowed.\n')
 
         # Test timeout limit but with valid input and default value.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(default='def', timeout=9999), 42)
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(default='def', timeout=9999), numType(numValue))
         self.assertEqual(getOut(), '')
 
         # Test retry limit but with valid input and default value.
-        pauseThenType('\n42\n')
-        self.assertEqual(pyip.inputNum(default='def', limit=9999), 42)
+        pauseThenType('\n' + numValue)
+        self.assertEqual(inputFunc(default='def', limit=9999), numType(numValue))
         self.assertEqual(getOut(), 'Blank values are not allowed.\n')
 
         # Test blank=True with blank input.
         pauseThenType('\n')
-        self.assertEqual(pyip.inputNum(blank=True), '')
+        self.assertEqual(inputFunc(blank=True), '')
         self.assertEqual(getOut(), '')
 
         # Test blank=True with normal valid input.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(blank=True), 42)
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(blank=True), numType(numValue))
         self.assertEqual(getOut(), '')
 
         # Test applyFunc keyword arg.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(applyFunc=lambda x: int(x)+1), 43)
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(applyFunc=lambda x: numType(x)+1), numType(numValue) + 1)
         self.assertEqual(getOut(), '')
 
         # Test allowlistRegexes keyword arg.
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(allowlistRegexes=['.*']), 42)
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(allowlistRegexes=['.*']), numType(numValue))
         self.assertEqual(getOut(), '')
-        pauseThenType('42\n')
-        self.assertEqual(pyip.inputNum(allowlistRegexes=['42']), 42)
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(allowlistRegexes=[numValue]), numType(numValue))
         self.assertEqual(getOut(), '')
+
+        # Test strip. (Note that strip=None has no effect and is the same
+        # as strip=True, since int()/float() don't care about whitespace.)
+        pauseThenType('  ' + numValue.strip() + '  \n')
+        self.assertEqual(inputFunc(), numType(numValue))
+        self.assertEqual(getOut(), '')
+
+        pauseThenType('abc' + numValue.strip() + 'cba\n')
+        self.assertEqual(inputFunc(strip='abc'), numType(numValue))
+        self.assertEqual(getOut(), '')
+
+        pauseThenType('abc ' + numValue.strip() + ' cba\n')
+        self.assertEqual(inputFunc(strip='abc'), numType(numValue))
+        self.assertEqual(getOut(), '')
+
+    def test_inputNum(self):
+        self._test_inputNumTemplate(pyip.inputNum, '42', int)
 
         # Test blocklistRegexes keyword arg, with a single regex.
         pauseThenType('42\n43\n')
@@ -245,21 +259,6 @@ class test_inputStr(unittest.TestCase):
         pauseThenType('42\n41\n')
         self.assertEqual(pyip.inputNum(blocklistRegexes=['[02468]$'], postValidateApplyFunc=lambda x: x+1), 42)
         self.assertEqual(getOut(), 'This response is invalid.\n')
-
-        # Test strip. (Note that strip=None has no effect and is the same
-        # as strip=True, since int()/float() don't care about whitespace.)
-        pauseThenType('  42  \n')
-        self.assertEqual(pyip.inputNum(), 42)
-        self.assertEqual(getOut(), '')
-
-        pauseThenType('abc42cba\n')
-        self.assertEqual(pyip.inputNum(strip='abc'), 42)
-        self.assertEqual(getOut(), '')
-
-        pauseThenType('abc 42 cba\n')
-        self.assertEqual(pyip.inputNum(strip='abc'), 42)
-        self.assertEqual(getOut(), '')
-
 
 if __name__ == '__main__':
     unittest.main()

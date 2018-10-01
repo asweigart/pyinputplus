@@ -135,9 +135,9 @@
         },
         "pysimplevalidate": {
             "hashes": [
-                "sha256:3efd1310a700cd7604b131a68663e1d51c880059c843f6e18e8e2412be5fe66f"
+                "sha256:a54b95674903824e7cbdf6ebe678be90b269795cfd3bbe04ff89f9abde993f3c"
             ],
-            "version": "==0.2.0"
+            "version": "==0.2.1"
         },
         "six": {
             "hashes": [
