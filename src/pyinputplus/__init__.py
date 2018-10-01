@@ -17,7 +17,7 @@ import time
 import pysimplevalidate as pysv
 
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 
 FUNC_TYPE = type(lambda x: x)
 METHOD_DESCRIPTOR_TYPE = type(str.upper)
@@ -49,39 +49,26 @@ class MetaDataEntry(object):
         self.userInput = None
 """
 
-def _checkLimitAndTimeout(default, startTime, timeout, tries, limit):
-    """Returns the default argument if the user has timed out or exceeded the
-    limit for number of responses. If default is None and the user has timed
-    out/exceeded the limit, a TimeoutException or RetryLimitException is raised,
-    respectively.
-
-    if the user enters valid input, but has exceeded the time limit, the user's input is discarded and `default` or `None` is returned.
+def _checkLimitAndTimeout(startTime, timeout, tries, limit):
+    """Returns a TimeoutException or RetryLimitException if the user has
+    exceeded those limits, otherwise returns None.
 
     Args:
-        `default` (str): A string to return as the user input if the user has timed out/exceeded the limit.
         `startTime` (float): The Unix epoch time when the input function was first called.
         `timeout` (float): A number of seconds the user has to enter valid input.
         `tries` (int): The number of times the user has already tried to enter valid input.
         `limit` (int): The number of tries the user has to enter valid input.
     """
 
-    # Check if the user has timed out.
-
     # NOTE: We return exceptions instead of raising them so the caller
-    # won't cause a "During handling of the above exception" message.
+    # can still display the original validation exception message.
     if timeout is not None and startTime + timeout < time.time():
-        if default is not None:
-            return default
-        else:
-            return TimeoutException()
+        return TimeoutException()
 
     if limit is not None and tries >= limit:
-        if default is not None:
-            return default
-        else:
-            return RetryLimitException()
+        return RetryLimitException()
 
-    return None # Returns None if the caller should do nothing.
+    return None # Returns None if there was neither a timeout or limit exceeded.
 
 
 def _genericInput(prompt='', default=None, timeout=None, limit=None,
@@ -91,6 +78,14 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
     handling timeouts, etc.
 
     See the input*() functions for examples of usage.
+
+    Note that the user must provide valid input within both the timeout limit
+    AND the retry limit, otherwise TimeoutException or RetryLimitException is
+    raised (unless there's a default value provided, in which case the default
+    value is returned.)
+
+    Note that the postValidateApplyFunc() is not called on the default value,
+    if a default value is provided.
 
     Args:
         `prompt` (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's `raw_input()` and `input()` functions.
@@ -103,7 +98,6 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
     """
 
     # NOTE: _genericInput() always returns a string. Any type casting must be done by the caller.
-
     # Validate the parameters.
     if not isinstance(prompt, str):
         raise PyInputPlusException('prompt argument must be a str')
@@ -134,19 +128,40 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
             userInput = applyFunc(userInput)
 
         # Run the validation function.
-        checkResult = None
         try:
             userInput = validationFunc(userInput) # If validation fails, this function will raise an exception.
         except Exception as exc:
-            # Check if they have timed out or reach the retry limit.
-            checkResult = _checkLimitAndTimeout(default=default, startTime=startTime, timeout=timeout, tries=tries, limit=limit)
-            if checkResult is not None and not isinstance(checkResult, Exception):
-                return checkResult
-            elif checkResult is None: # None indicates there was no timeout or retry limit reached.
-                print(exc) # Display the message of the exception.
+            # Check if they have timed out or reach the retry limit. (If so,
+            # the TimeoutException/RetryLimitException overrides the validation
+            # exception that was just raised.)
+            limitOrTimeoutException = _checkLimitAndTimeout(startTime=startTime, timeout=timeout, tries=tries, limit=limit)
+
+            print(exc) # Display the message of the validation exception.
+
+            if isinstance(limitOrTimeoutException, Exception):
+                if default is not None:
+                    # If there was a timeout/limit exceeded, return the default value if there is one.
+                    return default
+                else:
+                    # If there is no default, then raise the timeout/limit exception.
+                    raise limitOrTimeoutException
+            else:
+                # If there was no timeout/limit exceeded, let the user enter input again.
                 continue
-        if isinstance(checkResult, Exception):
-            raise checkResult # Raise the Timeout/RetryLimit exception.
+
+        # The previous call to _checkLimitAndTimeout() only happens when the
+        # user enteres invalid input. Now we should check for a timeout even if
+        # the last input was valid.
+        if timeout is not None and startTime + timeout < time.time():
+            # It doesn't matter that the user entered valid input, they've
+            # exceeded the timeout so we either return the default or raise
+            # TimeoutException.
+            if default is not None:
+                return default
+            else:
+                raise TimeoutException()
+
+
 
         if postValidateApplyFunc is not None:
             return postValidateApplyFunc(userInput)
@@ -155,7 +170,8 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
 
 
 def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+             strip=True, allowlistRegexes=None, blocklistRegexes=None,
+             applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a string. This is similar to Python's input()
     and raw_input() functions, but with PyInputPlus's additional features
     such as timeouts, retry limits, stripping, allowlist/blocklist, etc.
@@ -176,12 +192,12 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateGenericParameters(blank, strip, allowlistRegexes, blocklistRegexes)
 
-    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)
+    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)[1]
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
                            postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
-    return result[1]
+    return result
 
 
 def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
