@@ -29,7 +29,7 @@ def pauseThenType(text, pauseLen=0.05):
 def getOut(): # get captured output
     return sys.stdout.getvalue()
 
-class test_inputStr(unittest.TestCase):
+class test_main(unittest.TestCase):
     def test_inputStr(self):
         # Test typical usage.
         pauseThenType('hello\n')
@@ -40,6 +40,11 @@ class test_inputStr(unittest.TestCase):
         pauseThenType('hello\n')
         self.assertEqual(pyip.inputStr('Prompt>'), 'hello')
         self.assertEqual(getOut(), 'Prompt>')
+
+        # Test that prompt reappears.
+        pauseThenType('\nhello\n')
+        self.assertEqual(pyip.inputStr('Prompt>'), 'hello')
+        self.assertEqual(getOut(), 'Prompt>Blank values are not allowed.\nPrompt>')
 
         # Test default keyword arg with retry limit keyword arg.
         pauseThenType('\n\n')
@@ -165,6 +170,11 @@ class test_inputStr(unittest.TestCase):
         self.assertEqual(inputFunc('Prompt>'), numType(numValue))
         self.assertEqual(getOut(), 'Prompt>')
 
+        # Test that prompt reappears.
+        pauseThenType('\n' + numValue)
+        self.assertEqual(inputFunc('Prompt>'), numType(numValue))
+        self.assertEqual(getOut(), 'Prompt>Blank values are not allowed.\nPrompt>')
+
         # Test default keyword arg with retry limit keyword arg.
         pauseThenType('\n\n')
         self.assertEqual(inputFunc(default='def', limit=2), 'def')
@@ -264,9 +274,177 @@ class test_inputStr(unittest.TestCase):
     def test_inputInt(self):
         self._test_inputNumTemplate(pyip.inputInt, '42', int)
 
+        # Test blocklistRegexes keyword arg, with a single regex.
+        pauseThenType('42\n43\n')
+        self.assertEqual(pyip.inputInt(blocklistRegexes=['42']), 43)
+        self.assertEqual(getOut(), 'This response is invalid.\n')
+
+        # Test blocklistRegexes keyword arg, with multiple regexes.
+        pauseThenType('42\n44\n43\n')
+        self.assertEqual(pyip.inputInt(blocklistRegexes=['42', r'[02468]$']), 43)
+        self.assertEqual(getOut(), 'This response is invalid.\nThis response is invalid.\n')
+
+        # Test postValidateApplyFunc keyword arg.
+        # (The blocklist regex will block uppercase responses, but the
+        # postValidateApplyFunc will convert it to uppercase.)
+        pauseThenType('42\n41\n')
+        self.assertEqual(pyip.inputInt(blocklistRegexes=['[02468]$'], postValidateApplyFunc=lambda x: x+1), 42)
+        self.assertEqual(getOut(), 'This response is invalid.\n')
+
 
     def test_inputFloat(self):
         self._test_inputNumTemplate(pyip.inputFloat, '42.0', float)
+
+        # Test blocklistRegexes keyword arg, with a single regex.
+        pauseThenType('42.0\n43.0\n')
+        self.assertEqual(pyip.inputFloat(blocklistRegexes=['42']), 43.0)
+        self.assertEqual(getOut(), 'This response is invalid.\n')
+
+        # Test blocklistRegexes keyword arg, with multiple regexes.
+        pauseThenType('42.0\n44.0\n43.0\n')
+        self.assertEqual(pyip.inputFloat(blocklistRegexes=['42', r'[02468]\.']), 43.0)
+        self.assertEqual(getOut(), 'This response is invalid.\nThis response is invalid.\n')
+
+        # Test postValidateApplyFunc keyword arg.
+        # (The blocklist regex will block uppercase responses, but the
+        # postValidateApplyFunc will convert it to uppercase.)
+        pauseThenType('42.0\n41.0\n')
+        self.assertEqual(pyip.inputFloat(blocklistRegexes=[r'[02468]\.'], postValidateApplyFunc=lambda x: x+1), 42.0)
+        self.assertEqual(getOut(), 'This response is invalid.\n')
+
+
+    def test_inputChoice(self):
+        # Test typical usage.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog']), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test order of choices.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['dog', 'cat']), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: dog, cat\n')
+
+        # Test case-insensitivity.
+        pauseThenType('CAT\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog']), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test custom prompt.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], prompt='Choose:'), 'cat')
+        self.assertEqual(getOut(), 'Choose:')
+
+        # Test blank prompt.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], prompt=''), 'cat')
+        self.assertEqual(getOut(), '')
+
+        # Test that prompt reappears.
+        pauseThenType('\ncat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], prompt='Choose:'), 'cat')
+        self.assertEqual(getOut(), 'Choose:Blank values are not allowed.\nChoose:')
+
+        # Test default keyword arg with retry limit keyword arg.
+        pauseThenType('\n\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], default='def', limit=2), 'def')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\nBlank values are not allowed.\nPlease select one of: cat, dog\nBlank values are not allowed.\n')
+
+        # Test default keyword arg with timeout keyword arg.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], default='def', timeout=0.01), 'def')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test retry limit with no default value.
+        with self.assertRaises(pyip.RetryLimitException):
+            pauseThenType('\n\n')
+            pyip.inputChoice(['cat', 'dog'], limit=2)
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\nBlank values are not allowed.\nPlease select one of: cat, dog\nBlank values are not allowed.\n')
+
+        # Test timeout limit with no default value, entering valid input.
+        with self.assertRaises(pyip.TimeoutException):
+            pauseThenType('cat\n')
+            pyip.inputChoice(['cat', 'dog'], timeout=0.01)
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test timeout limit with no default value, entering invalid input.
+        with self.assertRaises(pyip.TimeoutException):
+            pauseThenType('\n')
+            pyip.inputChoice(['cat', 'dog'], timeout=0.01)
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\nBlank values are not allowed.\n')
+
+        # Test timeout limit but with valid input and default value.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], default='def', timeout=9999), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test retry limit but with valid input and default value.
+        pauseThenType('\ncat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], default='def', limit=9999), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\nBlank values are not allowed.\nPlease select one of: cat, dog\n')
+
+        # Test blank=True with blank input.
+        pauseThenType('\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blank=True), '')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test blank=True with normal valid input.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blank=True), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test blank=True with normal valid input and a default value. (Make sure
+        # the default value isn't used.)
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blank=True, default='def'), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test applyFunc keyword arg.
+        pauseThenType('c\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], applyFunc=lambda x: x + 'at'), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test allowlistRegexes keyword arg.
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], allowlistRegexes=['.*']), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+        pauseThenType('cat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], allowlistRegexes=['cat']), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        # Test blocklistRegexes keyword arg, with a single regex.
+        pauseThenType('cat\ndog\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blocklistRegexes=['cat']), 'dog')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\n')
+
+        # Test blocklistRegexes keyword arg, with multiple regexes.
+        pauseThenType('cat\ncAT\ndog\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blocklistRegexes=['cat', r'c\w+']), 'dog')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\n')
+
+        # Test postValidateApplyFunc keyword arg.
+        # (The blocklist regex will block uppercase responses, but the
+        # postValidateApplyFunc will convert it to uppercase.)
+        pauseThenType('CAT\ncat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blocklistRegexes=['[A-Z]+'], postValidateApplyFunc=str.upper), 'CAT')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\n')
+
+        # Test strip keyword arg
+        pauseThenType('   cat    \n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog']), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        pauseThenType(' cat \ncat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], strip=None), 'cat')
+        self.assertEqual(getOut(), "Please select one of: cat, dog\n' cat ' is not a valid choice.\nPlease select one of: cat, dog\n")
+
+        pauseThenType('xxxcat\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], strip='x'), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+        pauseThenType('xyzcatxxx\n')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], strip='xyz'), 'cat')
+        self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
 
 if __name__ == '__main__':
     unittest.main()

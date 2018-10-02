@@ -10,6 +10,8 @@ while PySimpleValidate provides the functions that validate the user's input.
 
 # TODO - Figure out a way to get doctests to work with input().
 
+# TODO - Possible future feature: using cmdline for tab-completion and history.
+
 from __future__ import absolute_import, division, print_function
 
 import time
@@ -311,7 +313,7 @@ def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=N
                     caseSensitive=False)
 
     if prompt == '_default':
-        prompt = 'Please select one of: %s.\n' % (', '.join(choices))
+        prompt = 'Please select one of: %s\n' % (', '.join(choices))
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
