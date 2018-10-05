@@ -172,7 +172,7 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
 
 
 def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=True, allowlistRegexes=None, blocklistRegexes=None,
+             strip=None, allowlistRegexes=None, blocklistRegexes=None,
              applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a string. This is similar to Python's input()
     and raw_input() functions, but with PyInputPlus's additional features
@@ -202,7 +202,7 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, lessThan=None, greaterThan=None):
     """Prompts the user to enter a number, either an integer or a floating-point
     value. Returns an int or float value (depending on if the user entered a
@@ -226,14 +226,14 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
 
     >>> result = inputNum(min=4)
     3
-    Input must be at minimum 4.
+    Number must be at minimum 4.
     4
     >>> result
     4
 
     >>> result = inputNum(greaterThan=4)
     4
-    Input must be greater than 4.
+    Number must be greater than 4.
     4.1
     >>> result
     4.1
@@ -251,7 +251,7 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, lessThan=None, greaterThan=None):
 
     # Validate the arguments passed to pysv.validateNum().
@@ -276,7 +276,7 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, lessThan=None, greaterThan=None):
 
     # Validate the arguments passed to pysv.validateNum().
@@ -301,7 +301,7 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
-                strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+                strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
                 caseSensitive=False):
 
     # Validate the arguments passed to pysv.validateChoice().
@@ -321,7 +321,7 @@ def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=N
 
 
 def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
-              strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+              strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
               numbered=False, lettered=False, caseSensitive=False):
 
     # Validate the arguments passed to pysv.validateChoice().
@@ -359,7 +359,7 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
 
 
 def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, limit=None,
-             strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     if formats is None:
         formats = ('%m/%d/%Y', '%m/%d/%y', '%Y/%m/%d', '%y/%m/%d', '%x')
@@ -372,7 +372,7 @@ def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, 
 
 
 def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None,
-				  strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+				  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 				  formats=('%m/%d/%Y %H:%M:%S', '%m/%d/%y %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%y/%m/%d %H:%M:%S', '%x %H:%M:%S',
                    '%m/%d/%Y %H:%M', '%m/%d/%y %H:%M', '%Y/%m/%d %H:%M', '%y/%m/%d %H:%M', '%x %H:%M',
                    '%m/%d/%Y %H:%M:%S', '%m/%d/%y %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%y/%m/%d %H:%M:%S', '%x %H:%M:%S')):
@@ -385,7 +385,7 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
 
 
 def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
-			  strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+			  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 			  formats=('%H:%M:%S', '%H:%M', '%X')):
 
     validationFunc = lambda value: pysv.validateTime(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, formats=formats)
@@ -396,7 +396,7 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
-               strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -406,7 +406,7 @@ def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
-               strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateMonth(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -416,7 +416,7 @@ def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=None,
-                   strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+                   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -426,7 +426,7 @@ def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=Non
 
 
 def inputDayOfMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
-                    strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+                    strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -436,7 +436,7 @@ def inputDayOfMonth(prompt='', default=None, blank=False, timeout=None, limit=No
 
 
 def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
-				strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+				strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateIp(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -446,7 +446,7 @@ def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=None, limit=None,
-			   strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateRegex(value, regex=regex, flags=flags, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -456,7 +456,7 @@ def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=Non
 
 
 def inputLiteralRegex(prompt='', default=None, blank=False, timeout=None, limit=None,
-				      strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+				      strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateRegex(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -466,7 +466,7 @@ def inputLiteralRegex(prompt='', default=None, blank=False, timeout=None, limit=
 
 
 def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
-		     strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+		     strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateURL(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -477,7 +477,7 @@ def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
 			   default=None, blank=False, timeout=None, limit=None,
-			   strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a yes/no response. The user can also enter
     `'y'` or `'n'`.
 
@@ -499,7 +499,7 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
 
 def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
                default=None, blank=False, timeout=None, limit=None,
-               strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a True/False response. The user can also enter
     `'t'` or `'f'`. Returns a boolean value.
 
@@ -520,7 +520,7 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
 
 
 def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
 
     validationFunc = lambda value: pysv.validateRegex(value, regex=r'(\d){3,5}(-\d\d\d\d)?', blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg='That is not a valid zip code.')
 
@@ -531,22 +531,22 @@ def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 # TODO - Finish the following
 def inputName(prompt='', default=None, blank=False, timeout=None, limit=None,
-			  strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
 
 
 def inputAddress(prompt='', default=None, blank=False, timeout=None, limit=None,
-				 strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+				 strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
 
 
 def inputPhone(prompt='', default=None, blank=False, timeout=None, limit=None,
-			   strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
 
 
 def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None,
-                  strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+                  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
                   mustExist=False):
     raise NotImplementedError()
 
@@ -558,7 +558,7 @@ def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None
 
 
 def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None,
-                  strip=True, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+                  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
                   mustExist=False):
     raise NotImplementedError()
 

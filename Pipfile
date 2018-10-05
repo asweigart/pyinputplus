@@ -4,8 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-tox = "*"
-detox = "*"
 pynput = "*"
 coverage = "*"
 pyinputplus = {editable = true, path = "."}

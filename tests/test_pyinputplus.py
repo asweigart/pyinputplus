@@ -1,7 +1,13 @@
 from __future__ import absolute_import, division, print_function
 
-# NOTE: We can't use pytest for these tests because using pyautogui to send the
-# input results in a "oserror: reading from stdin while output is captured" error.
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# NOTE: We can't use pytest for these tests because using pyautogui to send
+# the input results in a "oserror: reading from stdin while output is captured"
+# error.
+# These tests don't fail so much as hang the system. If you see the test hang,
+# that means there's a failure somewhere.
+# CURRENTLY TOX DOESN'T SEEM TO WORK WITH THIS TEST.
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 import io
 import sys
@@ -159,6 +165,76 @@ class test_main(unittest.TestCase):
         pauseThenType('one\ntwo\n' + numValue)
         self.assertEqual(inputFunc(), numType(numValue))
         #self.assertEqual(getOut(), "'one' is not a number.\n'two' is not a number.\n")
+
+        # Test negative numbers.
+        pauseThenType('-' + numValue)
+        self.assertEqual(inputFunc(), numType('-' + numValue))
+        self.assertEqual(getOut(), '')
+
+        # Test greater than min.
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(min=numType(numValue) - 1), numType(numValue))
+        self.assertEqual(getOut(), '')
+
+        # Test equal to min.
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(min=numType(numValue)), numType(numValue))
+        self.assertEqual(getOut(), '')
+
+        # Test less than min.
+        pauseThenType(str(numType(numValue) - 1) + '\n' + numValue)
+        self.assertEqual(inputFunc(min=numType(numValue)), numType(numValue))
+        self.assertEqual(getOut(), 'Input must be at minimum %s.\n' % (numType(numValue)))
+
+        # Test greater than max.
+        pauseThenType(str(numType(numValue) + 1) + '\n' + numValue)
+        self.assertEqual(inputFunc(max=numType(numValue)), numType(numValue))
+        self.assertEqual(getOut(), 'Input must be at maximum %s.\n' % (numType(numValue)))
+
+        # Test equal to max.
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(max=numType(numValue)), numType(numValue))
+        self.assertEqual(getOut(), '')
+
+        # Test less than max.
+        pauseThenType(str(numType(numValue) - 1) + '\n')
+        self.assertEqual(inputFunc(max=numType(numValue)), numType(numValue) - 1)
+        self.assertEqual(getOut(), '')
+
+        # Test greater than greaterThan.
+        pauseThenType(numValue)
+        self.assertEqual(inputFunc(greaterThan=numType(numValue) - 1), numType(numValue))
+        self.assertEqual(getOut(), '')
+
+        # Test equal to greaterThan.
+        pauseThenType(numValue + str(numType(numValue) + 1) + '\n')
+        self.assertEqual(inputFunc(greaterThan=numType(numValue)), numType(numValue) + 1)
+        self.assertEqual(getOut(), 'Input must be greater than %s.\n' % (numType(numValue)))
+
+        # Test less than greaterThan.
+        pauseThenType(str(numType(numValue) - 1) + '\n' + str(numType(numValue) + 1) + '\n')
+        self.assertEqual(inputFunc(greaterThan=numType(numValue)), numType(numValue) + 1)
+        self.assertEqual(getOut(), 'Input must be greater than %s.\n' % (numType(numValue)))
+
+        # Test greater than lessThan.
+        pauseThenType(str(numType(numValue) + 1) + '\n' + str(numType(numValue) - 1) + '\n')
+        self.assertEqual(inputFunc(lessThan=numType(numValue)), numType(numValue) - 1)
+        self.assertEqual(getOut(), 'Input must be less than %s.\n' % (numType(numValue)))
+
+        # Test equal to lessThan.
+        pauseThenType(numValue + str(numType(numValue) - 1) + '\n')
+        self.assertEqual(inputFunc(lessThan=numType(numValue)), numType(numValue) - 1)
+        self.assertEqual(getOut(), 'Input must be less than %s.\n' % (numType(numValue)))
+
+        # Test less than lessThan.
+        pauseThenType(str(numType(numValue) - 1) + '\n')
+        self.assertEqual(inputFunc(lessThan=numType(numValue)), numType(numValue) - 1)
+        self.assertEqual(getOut(), '')
+
+
+
+
+
 
         # Test postValidateApplyFunc keyword argument.
         pauseThenType(numValue)
