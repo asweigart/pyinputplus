@@ -19,7 +19,7 @@ import time
 import pysimplevalidate as pysv
 
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 FUNC_TYPE = type(lambda x: x)
 METHOD_DESCRIPTOR_TYPE = type(str.upper)
@@ -55,11 +55,10 @@ def _checkLimitAndTimeout(startTime, timeout, tries, limit):
     """Returns a TimeoutException or RetryLimitException if the user has
     exceeded those limits, otherwise returns None.
 
-    Args:
-        `startTime` (float): The Unix epoch time when the input function was first called.
-        `timeout` (float): A number of seconds the user has to enter valid input.
-        `tries` (int): The number of times the user has already tried to enter valid input.
-        `limit` (int): The number of tries the user has to enter valid input.
+    * startTime (float): The Unix epoch time when the input function was first called.
+    * timeout (float): A number of seconds the user has to enter valid input.
+    * tries (int): The number of times the user has already tried to enter valid input.
+    * limit (int): The number of tries the user has to enter valid input.
     """
 
     # NOTE: We return exceptions instead of raising them so the caller
@@ -89,14 +88,13 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
     Note that the postValidateApplyFunc() is not called on the default value,
     if a default value is provided.
 
-    Args:
-        `prompt` (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's `raw_input()` and `input()` functions.
-        `default` (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
-        `timeout` (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
-        `limit` (int): The number of tries the user has to enter valid input before the default value is returned.
-        `applyFunc` (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-        `validationFunc` (Callable): A function that is passed the user's input value, which raises an exception if the input isn't valid. (The return value of this function is ignored.)
-        `postValidateApplyFunc` (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * validationFunc (Callable): A function that is passed the user's input value, which raises an exception if the input isn't valid. (The return value of this function is ignored.)
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     """
 
     # NOTE: _genericInput() always returns a string. Any type casting must be done by the caller.
@@ -178,6 +176,17 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     and raw_input() functions, but with PyInputPlus's additional features
     such as timeouts, retry limits, stripping, allowlist/blocklist, etc.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
     >>> result = inputStr('Enter name> ')
     Enter name> Al
     >>> result
@@ -203,40 +212,61 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
              strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-             min=None, max=None, lessThan=None, greaterThan=None):
+             min=None, max=None, greaterThan=None, lessThan=None):
     """Prompts the user to enter a number, either an integer or a floating-point
     value. Returns an int or float value (depending on if the user entered a
     decimal in their input.)
 
-    >>> result = inputNum()
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
+    * max (None, int): If not None, the maximum accepted numeric value, including the maximum argument.
+    * greaterThan (None, int): If not None, the minimum accepted numeric value, not including the greaterThan argument.
+    * lessThan (None, int): If not None, the maximum accepted numeric value, not including the lessThan argument.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputNum()
     forty two
     'forty two' is not a number.
     42
-    >>> result
+    >>> response
     42
-
-    >>> result = inputNum()
+    >>> response = pyip.inputNum()
     9
-    >>> type(result)
+    >>> type(response)
     <class 'int'>
-    >>> result = inputNum()
+    >>> response = pyip.inputNum()
     9.0
-    >>> type(result)
+    >>> type(response)
     <class 'float'>
-
-    >>> result = inputNum(min=4)
+    >>> response = pyip.inputNum(min=4)
     3
     Number must be at minimum 4.
     4
-    >>> result
+    >>> response
     4
-
-    >>> result = inputNum(greaterThan=4)
+    >>> response = pyip.inputNum(greaterThan=4)
     4
     Number must be greater than 4.
     4.1
-    >>> result
+    >>> response
     4.1
+    >>> response = pyip.inputNum(limit=2)
+    dog
+    'dog' is not a number.
+    cat
+    'cat' is not a number.
+    Traceback (most recent call last):
+        ...
+    pyinputplus.RetryLimitException
     """
 
     # Validate the arguments passed to pysv.validateNum().
@@ -253,7 +283,58 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
              strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, lessThan=None, greaterThan=None):
+    """Prompts the user to enter an integer value. Returns the integer as an
+    int value.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
+    * max (None, int): If not None, the maximum accepted numeric value, including the maximum argument.
+    * greaterThan (None, int): If not None, the minimum accepted numeric value, not including the greaterThan argument.
+    * lessThan (None, int): If not None, the maximum accepted numeric value, not including the lessThan argument.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputInt()
+    42
+    >>> response
+    42
+    >>> type(response)
+    <class 'int'>
+    >>> response = pyip.inputInt(min=4)
+    4
+    >>> response
+    4
+    >>> response = pyip.inputInt(min=4)
+    3
+    Number must be at minimum 4.
+    -5
+    Number must be at minimum 4.
+    5
+    >>> response
+    5
+    >>> response = pyip.inputInt(blocklistRegexes=[r'[13579]$'])
+    43
+    This response is invalid.
+    41
+    This response is invalid.
+    42
+    >>> response
+    42
+    >>> response = pyip.inputInt()
+    42.0
+    >>> response
+    42
+    >>> type(response)
+    <class 'int'>
+    """
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
@@ -278,7 +359,32 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
              strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, lessThan=None, greaterThan=None):
+    """Prompts the user to enter a floating point number value.
+    Returns the number as a float.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
+    * max (None, int): If not None, the maximum accepted numeric value, including the maximum argument.
+    * greaterThan (None, int): If not None, the minimum accepted numeric value, not including the greaterThan argument.
+    * lessThan (None, int): If not None, the maximum accepted numeric value, not including the lessThan argument.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputFloat()
+    42
+    >>> response
+    42.0
+    >>> type(response)
+    <class 'float'>
+    """
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
@@ -303,6 +409,42 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
                 strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
                 caseSensitive=False):
+    """Prompts the user to enter one of the provided choices.
+    Returns the selected choice as a string.
+
+    * choices (Sequence): A sequence of strings, one of which the user must enter.
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * caseSensitive (bool): If True, the user must enter a choice that matches the case of the string in choices. Defaults to False.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputChoice(['dog', 'cat'])
+    Please select one of: dog, cat
+    dog
+    >>> response
+    'dog'
+    >>> response = pyip.inputChoice(['dog', 'cat'])
+    Please select one of: dog, cat
+    CAT
+    >>> response
+    'cat'
+    >>> response = pyip.inputChoice(['dog', 'cat'])
+    Please select one of: dog, cat
+    mouse
+    'mouse' is not a valid choice.
+    Please select one of: dog, cat
+    Dog
+    >>> response
+    'dog'
+    """
 
     # Validate the arguments passed to pysv.validateChoice().
     pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
@@ -323,14 +465,71 @@ def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=N
 def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
               numbered=False, lettered=False, caseSensitive=False):
+    """Prompts the user to enter one of the provided choices.
+    Also displays a small menu with bulleted, numbered, or lettered options.
+    Returns the selected choice as a string.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputMenu(['dog', 'cat'])
+    Please select one of the following:
+    * dog
+    * cat
+    DOG
+    >>> response
+    'dog'
+    >>> response = pyip.inputMenu(['dog', 'cat'], numbered=True)
+    Please select one of the following:
+    1. dog
+    2. cat
+    2
+    >>> response
+    'cat'
+    >>> response = pyip.inputMenu(['dog', 'cat'], lettered=True)
+    Please select one of the following:
+    A. dog
+    B. cat
+    B
+    >>> response
+    'cat'
+    >>> response = pyip.inputMenu(['dog', 'cat'], lettered=True)
+    Please select one of the following:
+    A. dog
+    B. cat
+    dog
+    >>> response
+    'dog'
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputMenu(['dog', 'cat'], caseSensitive=True)
+    Please select one of the following:
+    * dog
+    * cat
+    Dog
+    'Dog' is not a valid choice.
+    Please select one of the following:
+    * dog
+    * cat
+    dog
+    >>> response
+    'dog'
+    """
     # Validate the arguments passed to pysv.validateChoice().
     pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
                    numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
     validationFunc = lambda value: pysv.validateChoice(value, choices=choices, blank=blank,
                     strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
-                    numbered=numbered, lettered=lettered, caseSensitive=False)
+                    numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
     if prompt == '_default':
         prompt = 'Please select one of the following:\n'
@@ -360,7 +559,36 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
 
 def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, limit=None,
              strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter a date, formatted as a strptime-format in the formats list.
+    Returns a datetime.date object.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputDate()
+    2019/10/31
+    >>> response
+    datetime.date(2019, 10, 31)
+    >>> response = pyip.inputDate()
+    Oct 2019
+    'Oct 2019' is not a valid date.
+    10/31/2019
+    >>> response
+    datetime.date(2019, 10, 31)
+    >>> response = pyip.inputDate(formats=['%b %Y'])
+    Oct 2019
+    >>> response
+    datetime.date(2019, 10, 1)
+    """
     if formats is None:
         formats = ('%m/%d/%Y', '%m/%d/%y', '%Y/%m/%d', '%y/%m/%d', '%x')
 
@@ -376,7 +604,30 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
 				  formats=('%m/%d/%Y %H:%M:%S', '%m/%d/%y %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%y/%m/%d %H:%M:%S', '%x %H:%M:%S',
                    '%m/%d/%Y %H:%M', '%m/%d/%y %H:%M', '%Y/%m/%d %H:%M', '%y/%m/%d %H:%M', '%x %H:%M',
                    '%m/%d/%Y %H:%M:%S', '%m/%d/%y %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%y/%m/%d %H:%M:%S', '%x %H:%M:%S')):
+    """Prompts the user to enter a datetime, formatted as a strptime-format in the formats list.
+    Returns a datetime.datetime object.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputDatetime()
+    2019/10/31 12:00:01
+    >>> response
+    datetime.datetime(2019, 10, 31, 12, 0, 1)
+    >>> response = pyip.inputDatetime(formats=['hour %H minute %M'])
+    hour 12 minute 1
+    >>> response
+    datetime.datetime(1900, 1, 1, 12, 1)
+    """
     validationFunc = lambda value: pysv.validateDatetime(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, formats=formats)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -387,6 +638,34 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
 def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
 			  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 			  formats=('%H:%M:%S', '%H:%M', '%X')):
+    """Prompts the user to enter a date, formatted as a strptime-format in the formats list.
+    Returns a datetime.time object.
+
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputTime()
+    12:00:01
+    >>> response
+    datetime.time(12, 0, 1)
+    >>> response = pyip.inputTime()
+    12:00
+    >>> response
+    datetime.time(12, 0)
+    >>> response = pyip.inputTime(formats=['hour %H minute %M'])
+    hour 12 minute 1
+    >>> response
+    datetime.time(12, 1)
+    """
 
     validationFunc = lambda value: pysv.validateTime(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, formats=formats)
 
@@ -396,9 +675,37 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
-               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None, returnStateName=False):
+    """Prompts the user to enter United States state name or abbreviation.
+    Returns the state abbreviation (uness returnStateName is True, in which case the full state name in titlecase is returned.)
 
-    validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * returnStateName (bool): If True, the full state name is returned, i.e. 'California'. Otherwise, the abbreviation, i.e. 'CA'. Defaults to False.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputState()
+    ca
+    >>> response
+    'CA'
+    >>> response = pyip.inputState()
+    California
+    >>> response
+    'CA'
+    >>> response = pyip.inputState(returnStateName=True)
+    ca
+    >>> response
+    'California'
+    """
+    validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, returnStateName=returnStateName)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -407,7 +714,34 @@ def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
                strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter a month name.
+    Returns a string of the selected month name in titlecase.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputMonth()
+    3
+    >>> response
+    'March'
+    >>> response = pyip.inputMonth()
+    Mar
+    >>> response
+    'March'
+    >>> response = pyip.inputMonth()
+    MARCH
+    >>> response
+    'March'
+    """
     validationFunc = lambda value: pysv.validateMonth(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -417,7 +751,30 @@ def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=None,
                    strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user for a day of the week.
+    Returns the day name in titlecase.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputDayOfWeek()
+    mon
+    >>> response
+    'Monday'
+    >>> response = pyip.inputDayOfWeek()
+    FRIDAY
+    >>> response
+    'Friday'
+    """
     validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -425,10 +782,42 @@ def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=Non
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
-def inputDayOfMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
+def inputDayOfMonth(year, month, prompt='', default=None, blank=False, timeout=None, limit=None,
                     strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter a numeric month from 1 to 28, 30, or 31
+    (or 29 for leap years), depending on the given month and year.
+    Returns the entered day as an integer.
 
-    validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    * year (int): The given year, which determines the range of days in the month.
+    * month (int): The given month, which determines the range of days that can be selected.
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputDayOfMonth(2019, 10)
+    31
+    >>> response
+    31
+    >>> response = pyip.inputDayOfMonth(2000, 2)
+    29
+    >>> response
+    29
+    >>> response = pyip.inputDayOfMonth(2001, 2)
+    29
+    '29' is not a day in the month of February 2001
+    1
+    >>> response
+    1
+    """
+    validationFunc = lambda value: pysv.validateDayOfMonth(value, year, month, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -437,7 +826,21 @@ def inputDayOfMonth(prompt='', default=None, blank=False, timeout=None, limit=No
 
 def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
 				strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompt the user to enter an IPv4 or IPv6 address.
+    Returns the entered IP address as a string.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    """
     validationFunc = lambda value: pysv.validateIp(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -447,7 +850,21 @@ def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=None, limit=None,
 			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompt the user to enter a string that matches the provided regex string (or regex object) and flags.
+    Returns the entered string.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    """
     validationFunc = lambda value: pysv.validateRegex(value, regex=regex, flags=flags, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -455,9 +872,25 @@ def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=Non
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
-def inputLiteralRegex(prompt='', default=None, blank=False, timeout=None, limit=None,
+def inputRegexStr(prompt='', default=None, blank=False, timeout=None, limit=None,
 				      strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompt the user to enter a regular expression string. (Only Python-style
+    regex strings are accepted, not Perl- or JavaScript-style.)
+    Returns the entered regular expression string.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+
+    """
     validationFunc = lambda value: pysv.validateRegex(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -467,7 +900,36 @@ def inputLiteralRegex(prompt='', default=None, blank=False, timeout=None, limit=
 
 def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
 		     strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter a URL.
+    Returns the URL as a string.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputURL()
+    hello world
+    'hello world' is not a valid URL.
+    https://google.com
+    >>> response
+    'https://google.com'
+    >>> response = pyip.inputURL()
+    google.com
+    >>> response
+    'google.com'
+    >>> response = pyip.inputURL()
+    mailto:al@inventwithpython.com
+    >>> response
+    'mailto:al@inventwithpython.com'
+    """
     validationFunc = lambda value: pysv.validateURL(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -478,9 +940,38 @@ def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
 def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
 			   default=None, blank=False, timeout=None, limit=None,
 			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-    """Prompts the user to enter a yes/no response. The user can also enter
-    `'y'` or `'n'`.
+    """Prompts the user to enter a yes/no response.
+    The user can also enter y/n and use any case.
+    Returns the yesVal or noVal argument (which default to 'yes' and 'no'), depending on the user's selection.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputYesNo()
+    yes
+    >>> response
+    'yes'
+    >>> response = pyip.inputYesNo()
+    NO
+    >>> response
+    'no'
+    >>> response = pyip.inputYesNo()
+    Y
+    >>> response
+    'yes'
+    >>> response = pyip.inputYesNo(yesVal='oui', noVal='no')
+    oui
+    >>> response
+    'oui'
     """
     validationFunc = lambda value: pysv.validateYesNo(value, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -500,9 +991,32 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
 def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
                default=None, blank=False, timeout=None, limit=None,
                strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
-    """Prompts the user to enter a True/False response. The user can also enter
-    `'t'` or `'f'`. Returns a boolean value.
+    """Prompts the user to enter a True/False response.
+    The user can also enter t/f and in any case.
+    Returns a boolean value.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputBool()
+    true
+    >>> response
+    True
+    >>> type(response)
+    <class 'bool'>
+    >>> response = pyip.inputBool()
+    F
+    >>> response
+    False
     """
     validationFunc = lambda value: pysv.validateYesNo(value, yesVal=trueVal, noVal=falseVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
@@ -521,7 +1035,21 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
 
 def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
              strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter a 3 to 5-digit US zip code.
+    Returns the zipcode as a string.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    """
     validationFunc = lambda value: pysv.validateRegex(value, regex=r'(\d){3,5}(-\d\d\d\d)?', blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg='That is not a valid zip code.')
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -546,11 +1074,25 @@ def inputPhone(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None,
-                  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
-                  mustExist=False):
-    raise NotImplementedError()
+                  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter a filename.
+    Filenames can't contain \\ / : * ? " < > | or end with a space.
+    Note that this validates filenames, not filepaths. The / and \\ characters are invalid for filenames.
+    Returns the filename as a string.
 
-    validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, mustExist=mustExist)
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    """
+    validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -560,8 +1102,21 @@ def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None
 def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None,
                   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
                   mustExist=False):
-    raise NotImplementedError()
+    """Prompts the user to enter a filepath. If mustExist is True, then this filepath must exist on the local filesystem.
+    Returns the filepath as a string.
 
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    """
     validationFunc = lambda value: pysv.validateFilepath(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, mustExist=mustExist)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,

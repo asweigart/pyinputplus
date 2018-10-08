@@ -142,7 +142,7 @@ class test_main(unittest.TestCase):
         self.assertEqual(getOut(), '')
 
         pauseThenType(' hello \n')
-        self.assertEqual(pyip.inputStr(strip=None), ' hello ')
+        self.assertEqual(pyip.inputStr(strip=False), ' hello ')
         self.assertEqual(getOut(), '')
 
         pauseThenType('xxxhello\n')
@@ -184,12 +184,12 @@ class test_main(unittest.TestCase):
         # Test less than min.
         pauseThenType(str(numType(numValue) - 1) + '\n' + numValue)
         self.assertEqual(inputFunc(min=numType(numValue)), numType(numValue))
-        self.assertEqual(getOut(), 'Input must be at minimum %s.\n' % (numType(numValue)))
+        self.assertEqual(getOut(), 'Number must be at minimum %s.\n' % (numType(numValue)))
 
         # Test greater than max.
         pauseThenType(str(numType(numValue) + 1) + '\n' + numValue)
         self.assertEqual(inputFunc(max=numType(numValue)), numType(numValue))
-        self.assertEqual(getOut(), 'Input must be at maximum %s.\n' % (numType(numValue)))
+        self.assertEqual(getOut(), 'Number must be at maximum %s.\n' % (numType(numValue)))
 
         # Test equal to max.
         pauseThenType(numValue)
@@ -209,22 +209,22 @@ class test_main(unittest.TestCase):
         # Test equal to greaterThan.
         pauseThenType(numValue + str(numType(numValue) + 1) + '\n')
         self.assertEqual(inputFunc(greaterThan=numType(numValue)), numType(numValue) + 1)
-        self.assertEqual(getOut(), 'Input must be greater than %s.\n' % (numType(numValue)))
+        self.assertEqual(getOut(), 'Number must be greater than %s.\n' % (numType(numValue)))
 
         # Test less than greaterThan.
         pauseThenType(str(numType(numValue) - 1) + '\n' + str(numType(numValue) + 1) + '\n')
         self.assertEqual(inputFunc(greaterThan=numType(numValue)), numType(numValue) + 1)
-        self.assertEqual(getOut(), 'Input must be greater than %s.\n' % (numType(numValue)))
+        self.assertEqual(getOut(), 'Number must be greater than %s.\n' % (numType(numValue)))
 
         # Test greater than lessThan.
         pauseThenType(str(numType(numValue) + 1) + '\n' + str(numType(numValue) - 1) + '\n')
         self.assertEqual(inputFunc(lessThan=numType(numValue)), numType(numValue) - 1)
-        self.assertEqual(getOut(), 'Input must be less than %s.\n' % (numType(numValue)))
+        self.assertEqual(getOut(), 'Number must be less than %s.\n' % (numType(numValue)))
 
         # Test equal to lessThan.
         pauseThenType(numValue + str(numType(numValue) - 1) + '\n')
         self.assertEqual(inputFunc(lessThan=numType(numValue)), numType(numValue) - 1)
-        self.assertEqual(getOut(), 'Input must be less than %s.\n' % (numType(numValue)))
+        self.assertEqual(getOut(), 'Number must be less than %s.\n' % (numType(numValue)))
 
         # Test less than lessThan.
         pauseThenType(str(numType(numValue) - 1) + '\n')
@@ -510,7 +510,7 @@ class test_main(unittest.TestCase):
         self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
 
         pauseThenType(' cat \ncat\n')
-        self.assertEqual(pyip.inputChoice(['cat', 'dog'], strip=None), 'cat')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], strip=False), 'cat')
         self.assertEqual(getOut(), "Please select one of: cat, dog\n' cat ' is not a valid choice.\nPlease select one of: cat, dog\n")
 
         pauseThenType('xxxcat\n')
