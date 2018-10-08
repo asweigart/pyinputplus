@@ -19,7 +19,7 @@ import time
 import pysimplevalidate as pysv
 
 
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 FUNC_TYPE = type(lambda x: x)
 METHOD_DESCRIPTOR_TYPE = type(str.upper)
@@ -1124,3 +1124,32 @@ def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
 
 
+def inputEmail(prompt='', default=None, blank=False, timeout=None, limit=None,
+               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter an email address.
+    Returns the email address as a string.
+
+    * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
+    * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
+    * blank (bool): If True, a blank string will be accepted. Defaults to False.
+    * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
+    * limit (int): The number of tries the user has to enter valid input before the default value is returned.
+    * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
+    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
+    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+
+    >>> import pyinputplus as pyip
+    >>> response = pyip.inputEmail()
+    hello world
+    'hello world' is not a valid email address.
+    al@inventwithpython.com
+    >>> response
+    'al@inventwithpython.com'
+    """
+    validationFunc = lambda value: pysv.validateEmail(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
