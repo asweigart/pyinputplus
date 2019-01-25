@@ -185,7 +185,7 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> result = inputStr('Enter name> ')
     Enter name> Al

@@ -177,3 +177,48 @@ The ``inputMenu()`` function takes the same arguments as ``inputChoice()`` but p
     >>> response
     'cats'
 
+inputYesNo(), inputBool()
+-------------------------
+
+TODO
+
+inputEmail()
+------------
+
+TODO
+
+inputDate(), inputDatetime(), inputTime()
+------------------------------------------
+
+TODO
+
+inputMonth(), inputDayOfWeek(), inputDayOfMonth()
+-------------------------------------------------
+
+TODO
+
+inputState(), inputZip()
+------------------------
+
+TODO
+
+inputIp(), inputURL()
+---------------------
+
+TODO
+
+inputRegex()
+------------
+
+TODO
+
+inputRegexStr()
+---------------
+
+TODO
+
+inputFilename(), inputFilepath()
+--------------------------------
+
+TODO
+
