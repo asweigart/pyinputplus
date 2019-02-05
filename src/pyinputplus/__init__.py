@@ -158,8 +158,6 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
             else:
                 raise TimeoutException()
 
-
-
         if postValidateApplyFunc is not None:
             return postValidateApplyFunc(userInput)
         else:
@@ -168,10 +166,14 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
 
 def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
              strip=None, allowlistRegexes=None, blocklistRegexes=None,
-             applyFunc=None, postValidateApplyFunc=None):
-    """Prompts the user to enter a string. This is similar to Python's input()
+             applyFunc=None, postValidateApplyFunc=None, validationFunc=None):
+    """Prompts the user to enter input. This is similar to Python's input()
     and raw_input() functions, but with PyInputPlus's additional features
     such as timeouts, retry limits, stripping, allowlist/blocklist, etc.
+
+    Validation can be performed by the validationFunc argument, which raises
+    an exception if the input is invalid. The exception message is used to
+    tell the user why the input is invalid.
 
     * prompt (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
     * default (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
@@ -183,6 +185,7 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * validationFunc (Callable, None): A function that is used to validate the input. Validation fails if it raises an exception, and the exception message is displayed to the user.
 
     >>> result = inputStr('Enter name> ')
     Enter name> Al
@@ -200,11 +203,17 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateGenericParameters(blank, strip, allowlistRegexes, blocklistRegexes)
 
-    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)[1]
+    if validationFunc is None:
+        customValidationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)[1]
+    else:
+        # Modify validationFunc so it calls the passed in function but also pysv._prevalidationCheck()
+        def customValidationFunc(value):
+            validationFunc(value)
+            return pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)[1]
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
-                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=customValidationFunc)
 
 
 def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
