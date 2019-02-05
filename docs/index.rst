@@ -85,6 +85,24 @@ These keyword arguments apply to all of PyInputPlus's functions.
     'HELLO'
     >>>
 
+inputCustom()
+-------------
+
+Pass a custom function to do validation. This function accepts one string argument, raises an exception if it fails validation (the exception
+message is the message shown to the user), and returns None if the user input should be unmodified or returns a new value that `inputCustom()`
+should return.
+
+    >>> def isEven(value):
+    ...     if float(value) % 2 != 0:
+    ...         raise Exception('This is not an even value.')
+    ... 
+    >>> response = pyip.inputCustom(isEven)
+    5
+    This is not an even value.
+    4
+    >>> response
+    '4'
+
 inputNum(), inputInt(), inputFloat()
 ------------------------------------
 

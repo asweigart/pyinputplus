@@ -154,6 +154,22 @@ class test_main(unittest.TestCase):
         self.assertEqual(getOut(), '')
 
 
+    def test_inputCustom(self):
+        # Test validation function arg:
+        def isEven(value):
+            if float(value) % 2 != 0:
+                raise Exception('This is not an even value.')
+
+        pauseThenType('4.1\n2\n')
+        self.assertEqual(pyip.inputCustom(isEven), '2')
+        pauseThenType('hello\n2\n')
+        self.assertEqual(pyip.inputCustom(isEven), '2')
+        pauseThenType('4\n')
+        self.assertEqual(pyip.inputCustom(isEven), '4')
+        pauseThenType('4.0\n')
+        self.assertEqual(pyip.inputCustom(isEven), '4.0')
+
+
     def _test_inputNumTemplate(self, inputFunc, numValue, numType):
         numValue += '\n'
         # Test typical usage.
