@@ -19,10 +19,7 @@ import time
 import pysimplevalidate as pysv
 
 
-__version__ = '0.2.3'
-
-FUNC_TYPE = type(lambda x: x)
-METHOD_DESCRIPTOR_TYPE = type(str.upper)
+__version__ = '0.2.4'
 
 class PyInputPlusException(Exception):
     """Base class for exceptions raised when PyInputPlus functions encounter
@@ -94,7 +91,7 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * validationFunc (Callable): A function that is passed the user's input value, which raises an exception if the input isn't valid. (The return value of this function is ignored.)
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     """
 
     # NOTE: _genericInput() always returns a string. Any type casting must be done by the caller.
@@ -107,11 +104,11 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
         raise PyInputPlusException('timeout argument must be an int or float')
     if not isinstance(limit, (int, type(None))):
         raise PyInputPlusException('limit argument must be an int')
-    if not isinstance(validationFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type)):
+    if not callable(validationFunc):
         raise PyInputPlusException('validationFunc argument must be a function')
-    if not isinstance(applyFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type(None), type)):
+    if not (callable(applyFunc) or applyFunc is None):
         raise PyInputPlusException('applyFunc argument must be a function or None')
-    if not isinstance(postValidateApplyFunc, (FUNC_TYPE, METHOD_DESCRIPTOR_TYPE, type(None), type)):
+    if not (callable(postValidateApplyFunc) or postValidateApplyFunc is None):
         raise PyInputPlusException('postValidateApplyFunc argument must be a function or None')
 
     startTime = time.time()
@@ -129,7 +126,7 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
 
         # Run the validation function.
         try:
-            userInput = validationFunc(userInput) # If validation fails, this function will raise an exception.
+            userInput = validationFunc(userInput) # If validation fails, this function will raise an exception. Returns an updated value to use as user input (e.g. stripped of whitespace, etc.)
         except Exception as exc:
             # Check if they have timed out or reach the retry limit. (If so,
             # the TimeoutException/RetryLimitException overrides the validation
@@ -226,7 +223,7 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
     * max (None, int): If not None, the maximum accepted numeric value, including the maximum argument.
     * greaterThan (None, int): If not None, the minimum accepted numeric value, not including the greaterThan argument.
@@ -295,7 +292,7 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
     * max (None, int): If not None, the maximum accepted numeric value, including the maximum argument.
     * greaterThan (None, int): If not None, the minimum accepted numeric value, not including the greaterThan argument.
@@ -371,7 +368,7 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
     * max (None, int): If not None, the maximum accepted numeric value, including the maximum argument.
     * greaterThan (None, int): If not None, the minimum accepted numeric value, not including the greaterThan argument.
@@ -422,7 +419,7 @@ def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=N
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * caseSensitive (bool): If True, the user must enter a choice that matches the case of the string in choices. Defaults to False.
 
     >>> import pyinputplus as pyip
@@ -478,7 +475,7 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputMenu(['dog', 'cat'])
@@ -571,7 +568,7 @@ def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, 
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputDate()
@@ -616,7 +613,7 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputDatetime()
@@ -650,7 +647,7 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputTime()
@@ -688,7 +685,7 @@ def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * returnStateName (bool): If True, the full state name is returned, i.e. 'California'. Otherwise, the abbreviation, i.e. 'CA'. Defaults to False.
 
     >>> import pyinputplus as pyip
@@ -726,7 +723,7 @@ def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputMonth()
@@ -763,7 +760,7 @@ def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=Non
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputDayOfWeek()
@@ -799,7 +796,7 @@ def inputDayOfMonth(year, month, prompt='', default=None, blank=False, timeout=N
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputDayOfMonth(2019, 10)
@@ -838,7 +835,7 @@ def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
     validationFunc = lambda value: pysv.validateIp(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
@@ -862,7 +859,7 @@ def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=Non
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
     validationFunc = lambda value: pysv.validateRegex(value, regex=regex, flags=flags, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
@@ -887,7 +884,7 @@ def inputRegexStr(prompt='', default=None, blank=False, timeout=None, limit=None
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
 
     """
@@ -912,7 +909,7 @@ def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputURL()
@@ -953,7 +950,7 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputYesNo()
@@ -1004,7 +1001,7 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputBool()
@@ -1047,7 +1044,7 @@ def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
     validationFunc = lambda value: pysv.validateRegex(value, regex=r'(\d){3,5}(-\d\d\d\d)?', blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg='That is not a valid zip code.')
@@ -1089,7 +1086,7 @@ def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
     validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
@@ -1114,7 +1111,7 @@ def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
     validationFunc = lambda value: pysv.validateFilepath(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, mustExist=mustExist)
@@ -1138,7 +1135,7 @@ def inputEmail(prompt='', default=None, blank=False, timeout=None, limit=None,
     * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
     * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
-    * postValidateApplyFunc (Callable): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputEmail()
