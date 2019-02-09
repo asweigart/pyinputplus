@@ -111,29 +111,29 @@ class test_main(unittest.TestCase):
         self.assertEqual(pyip.inputStr(applyFunc=str.upper), 'HELLO')
         self.assertEqual(getOut(), '')
 
-        # Test allowlistRegexes keyword arg.
+        # Test allowRegexes keyword arg.
         pauseThenType('hello\n')
-        self.assertEqual(pyip.inputStr(allowlistRegexes=['.*']), 'hello')
+        self.assertEqual(pyip.inputStr(allowRegexes=['.*']), 'hello')
         self.assertEqual(getOut(), '')
         pauseThenType('hello\n')
-        self.assertEqual(pyip.inputStr(allowlistRegexes=['hello']), 'hello')
+        self.assertEqual(pyip.inputStr(allowRegexes=['hello']), 'hello')
         self.assertEqual(getOut(), '')
 
-        # Test blocklistRegexes keyword arg, with a single regex.
+        # Test blockRegexes keyword arg, with a single regex.
         pauseThenType('hello\nhowdy\n')
-        self.assertEqual(pyip.inputStr(blocklistRegexes=['hello']), 'howdy')
+        self.assertEqual(pyip.inputStr(blockRegexes=['hello']), 'howdy')
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
-        # Test blocklistRegexes keyword arg, with multiple regexes.
+        # Test blockRegexes keyword arg, with multiple regexes.
         pauseThenType('hello\nhowdy\n!!!\n')
-        self.assertEqual(pyip.inputStr(blocklistRegexes=['hello', r'\w+']), '!!!')
+        self.assertEqual(pyip.inputStr(blockRegexes=['hello', r'\w+']), '!!!')
         self.assertEqual(getOut(), 'This response is invalid.\nThis response is invalid.\n')
 
         # Test postValidateApplyFunc keyword arg.
         # (The blocklist regex will block uppercase responses, but the
         # postValidateApplyFunc will convert it to uppercase.)
         pauseThenType('HOWDY\nhello\n')
-        self.assertEqual(pyip.inputStr(blocklistRegexes=['[A-Z]+'], postValidateApplyFunc=str.upper), 'HELLO')
+        self.assertEqual(pyip.inputStr(blockRegexes=['[A-Z]+'], postValidateApplyFunc=str.upper), 'HELLO')
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
         # Test strip keyword arg
@@ -320,12 +320,12 @@ class test_main(unittest.TestCase):
         self.assertEqual(inputFunc(applyFunc=lambda x: numType(x)+1), numType(numValue) + 1)
         self.assertEqual(getOut(), '')
 
-        # Test allowlistRegexes keyword arg.
+        # Test allowRegexes keyword arg.
         pauseThenType(numValue)
-        self.assertEqual(inputFunc(allowlistRegexes=['.*']), numType(numValue))
+        self.assertEqual(inputFunc(allowRegexes=['.*']), numType(numValue))
         self.assertEqual(getOut(), '')
         pauseThenType(numValue)
-        self.assertEqual(inputFunc(allowlistRegexes=[numValue]), numType(numValue))
+        self.assertEqual(inputFunc(allowRegexes=[numValue]), numType(numValue))
         self.assertEqual(getOut(), '')
 
         # Test strip. (Note that strip=None has no effect and is the same
@@ -346,62 +346,62 @@ class test_main(unittest.TestCase):
         self._test_inputNumTemplate(pyip.inputNum, '42', int)
         self._test_inputNumTemplate(pyip.inputNum, '42.0', float)
 
-        # Test blocklistRegexes keyword arg, with a single regex.
+        # Test blockRegexes keyword arg, with a single regex.
         pauseThenType('42\n43\n')
-        self.assertEqual(pyip.inputNum(blocklistRegexes=['42']), 43)
+        self.assertEqual(pyip.inputNum(blockRegexes=['42']), 43)
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
-        # Test blocklistRegexes keyword arg, with multiple regexes.
+        # Test blockRegexes keyword arg, with multiple regexes.
         pauseThenType('42\n44\n43\n')
-        self.assertEqual(pyip.inputNum(blocklistRegexes=['42', r'[02468]$']), 43)
+        self.assertEqual(pyip.inputNum(blockRegexes=['42', r'[02468]$']), 43)
         self.assertEqual(getOut(), 'This response is invalid.\nThis response is invalid.\n')
 
         # Test postValidateApplyFunc keyword arg.
         # (The blocklist regex will block uppercase responses, but the
         # postValidateApplyFunc will convert it to uppercase.)
         pauseThenType('42\n41\n')
-        self.assertEqual(pyip.inputNum(blocklistRegexes=['[02468]$'], postValidateApplyFunc=lambda x: x+1), 42)
+        self.assertEqual(pyip.inputNum(blockRegexes=['[02468]$'], postValidateApplyFunc=lambda x: x+1), 42)
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
     def test_inputInt(self):
         self._test_inputNumTemplate(pyip.inputInt, '42', int)
 
-        # Test blocklistRegexes keyword arg, with a single regex.
+        # Test blockRegexes keyword arg, with a single regex.
         pauseThenType('42\n43\n')
-        self.assertEqual(pyip.inputInt(blocklistRegexes=['42']), 43)
+        self.assertEqual(pyip.inputInt(blockRegexes=['42']), 43)
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
-        # Test blocklistRegexes keyword arg, with multiple regexes.
+        # Test blockRegexes keyword arg, with multiple regexes.
         pauseThenType('42\n44\n43\n')
-        self.assertEqual(pyip.inputInt(blocklistRegexes=['42', r'[02468]$']), 43)
+        self.assertEqual(pyip.inputInt(blockRegexes=['42', r'[02468]$']), 43)
         self.assertEqual(getOut(), 'This response is invalid.\nThis response is invalid.\n')
 
         # Test postValidateApplyFunc keyword arg.
         # (The blocklist regex will block uppercase responses, but the
         # postValidateApplyFunc will convert it to uppercase.)
         pauseThenType('42\n41\n')
-        self.assertEqual(pyip.inputInt(blocklistRegexes=['[02468]$'], postValidateApplyFunc=lambda x: x+1), 42)
+        self.assertEqual(pyip.inputInt(blockRegexes=['[02468]$'], postValidateApplyFunc=lambda x: x+1), 42)
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
 
     def test_inputFloat(self):
         self._test_inputNumTemplate(pyip.inputFloat, '42.0', float)
 
-        # Test blocklistRegexes keyword arg, with a single regex.
+        # Test blockRegexes keyword arg, with a single regex.
         pauseThenType('42.0\n43.0\n')
-        self.assertEqual(pyip.inputFloat(blocklistRegexes=['42']), 43.0)
+        self.assertEqual(pyip.inputFloat(blockRegexes=['42']), 43.0)
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
-        # Test blocklistRegexes keyword arg, with multiple regexes.
+        # Test blockRegexes keyword arg, with multiple regexes.
         pauseThenType('42.0\n44.0\n43.0\n')
-        self.assertEqual(pyip.inputFloat(blocklistRegexes=['42', r'[02468]\.']), 43.0)
+        self.assertEqual(pyip.inputFloat(blockRegexes=['42', r'[02468]\.']), 43.0)
         self.assertEqual(getOut(), 'This response is invalid.\nThis response is invalid.\n')
 
         # Test postValidateApplyFunc keyword arg.
         # (The blocklist regex will block uppercase responses, but the
         # postValidateApplyFunc will convert it to uppercase.)
         pauseThenType('42.0\n41.0\n')
-        self.assertEqual(pyip.inputFloat(blocklistRegexes=[r'[02468]\.'], postValidateApplyFunc=lambda x: x+1), 42.0)
+        self.assertEqual(pyip.inputFloat(blockRegexes=[r'[02468]\.'], postValidateApplyFunc=lambda x: x+1), 42.0)
         self.assertEqual(getOut(), 'This response is invalid.\n')
 
 
@@ -495,29 +495,29 @@ class test_main(unittest.TestCase):
         self.assertEqual(pyip.inputChoice(['cat', 'dog'], applyFunc=lambda x: x + 'at'), 'cat')
         self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
 
-        # Test allowlistRegexes keyword arg.
+        # Test allowRegexes keyword arg.
         pauseThenType('cat\n')
-        self.assertEqual(pyip.inputChoice(['cat', 'dog'], allowlistRegexes=['.*']), 'cat')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], allowRegexes=['.*']), 'cat')
         self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
         pauseThenType('cat\n')
-        self.assertEqual(pyip.inputChoice(['cat', 'dog'], allowlistRegexes=['cat']), 'cat')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], allowRegexes=['cat']), 'cat')
         self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
 
-        # Test blocklistRegexes keyword arg, with a single regex.
+        # Test blockRegexes keyword arg, with a single regex.
         pauseThenType('cat\ndog\n')
-        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blocklistRegexes=['cat']), 'dog')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blockRegexes=['cat']), 'dog')
         self.assertEqual(getOut(), 'Please select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\n')
 
-        # Test blocklistRegexes keyword arg, with multiple regexes.
+        # Test blockRegexes keyword arg, with multiple regexes.
         pauseThenType('cat\ncAT\ndog\n')
-        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blocklistRegexes=['cat', r'c\w+']), 'dog')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blockRegexes=['cat', r'c\w+']), 'dog')
         self.assertEqual(getOut(), 'Please select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\n')
 
         # Test postValidateApplyFunc keyword arg.
         # (The blocklist regex will block uppercase responses, but the
         # postValidateApplyFunc will convert it to uppercase.)
         pauseThenType('CAT\ncat\n')
-        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blocklistRegexes=['[A-Z]+'], postValidateApplyFunc=str.upper), 'CAT')
+        self.assertEqual(pyip.inputChoice(['cat', 'dog'], blockRegexes=['[A-Z]+'], postValidateApplyFunc=str.upper), 'CAT')
         self.assertEqual(getOut(), 'Please select one of: cat, dog\nThis response is invalid.\nPlease select one of: cat, dog\n')
 
         # Test strip keyword arg
@@ -536,6 +536,27 @@ class test_main(unittest.TestCase):
         pauseThenType('xyzcatxxx\n')
         self.assertEqual(pyip.inputChoice(['cat', 'dog'], strip='xyz'), 'cat')
         self.assertEqual(getOut(), 'Please select one of: cat, dog\n')
+
+
+    def test_inputPassword(self):
+        # Test typical usage.
+        pauseThenType('swordfish\n')
+        self.assertEqual(pyip.inputPassword(), 'swordfish')
+
+        # Test that it doesn't strip whitespace by default.
+        pauseThenType('  PasswordWithSpaces  \n')
+        self.assertEqual(pyip.inputPassword('  PasswordWithSpaces  '), '  PasswordWithSpaces  ')
+
+        # Test the backspace character.
+        pauseThenType('swordfish\b\b\b\b\b\b\b\b\bmary\n')
+        self.assertEqual(pyip.inputPassword(), 'mary')
+
+        # Test that typing too many backspace characters causes you to start over entering the password.
+        pauseThenType('swordfish' + ('\b' * 20) + 'mary\n')
+        self.assertEqual(pyip.inputPassword(), 'mary')
+
+
+
 
 
 if __name__ == '__main__':

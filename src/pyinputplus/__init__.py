@@ -17,9 +17,9 @@ from __future__ import absolute_import, division, print_function
 import time
 
 import pysimplevalidate as pysv
+import stdiomask
 
-
-__version__ = '0.2.4'
+__version__ = '0.2.6'
 
 class PyInputPlusException(Exception):
     """Base class for exceptions raised when PyInputPlus functions encounter
@@ -70,7 +70,8 @@ def _checkLimitAndTimeout(startTime, timeout, tries, limit):
 
 
 def _genericInput(prompt='', default=None, timeout=None, limit=None,
-                  applyFunc=None, validationFunc=None, postValidateApplyFunc=None):
+                  applyFunc=None, validationFunc=None, postValidateApplyFunc=None,
+                  passwordMask=None):
     """This function is used by the various input*() functions to handle the
     common operations of each input function: displaying prompts, collecting input,
     handling timeouts, etc.
@@ -92,6 +93,7 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * validationFunc (Callable): A function that is passed the user's input value, which raises an exception if the input isn't valid. (The return value of this function is ignored.)
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
+    * passwordMask (str, None): An optional argument. If not None, this getpass.getpass() is used instead of
     """
 
     # NOTE: _genericInput() always returns a string. Any type casting must be done by the caller.
@@ -110,6 +112,8 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
         raise PyInputPlusException('applyFunc argument must be a function or None')
     if not (callable(postValidateApplyFunc) or postValidateApplyFunc is None):
         raise PyInputPlusException('postValidateApplyFunc argument must be a function or None')
+    if passwordMask is not None and len(passwordMask) > 1:
+        raise PyInputPlusException('passwordMask argument must be None or a single-character string.')
 
     startTime = time.time()
     tries = 0
@@ -117,7 +121,10 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
     while True:
         # Get the user input.
         print(prompt, end='')
-        userInput = input()
+        if passwordMask is None:
+            userInput = input()
+        else:
+            userInput = stdiomask.getpass(prompt='', mask=passwordMask)
         tries += 1
 
         # Transform the user input with the applyFunc function.
@@ -167,7 +174,7 @@ def _genericInput(prompt='', default=None, timeout=None, limit=None,
 
 
 def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=None, allowlistRegexes=None, blocklistRegexes=None,
+             strip=None, allowRegexes=None, blockRegexes=None,
              applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter input. This is similar to Python's input()
     and raw_input() functions, but with PyInputPlus's additional features
@@ -183,8 +190,8 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -193,7 +200,7 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     >>> result
     'Al'
 
-    >>> result = inputStr('Enter name> ', blocklistRegexes=['^Al$'])
+    >>> result = inputStr('Enter name> ', blockRegexes=['^Al$'])
     Enter name> Al
     This response is invalid.
     Enter name> Bob
@@ -202,9 +209,9 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
     """
 
     # Validate the arguments passed to pysv.validateNum().
-    pysv._validateGenericParameters(blank, strip, allowlistRegexes, blocklistRegexes)
+    pysv._validateGenericParameters(blank, strip, allowRegexes, blockRegexes)
 
-    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)[1]
+    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, excMsg=None)[1]
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -212,7 +219,7 @@ def inputStr(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputCustom(customValidationFunc, prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=None, allowlistRegexes=None, blocklistRegexes=None,
+             strip=None, allowRegexes=None, blockRegexes=None,
              applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter input. This is similar to Python's input()
     and raw_input() functions, but with PyInputPlus's additional features
@@ -229,18 +236,18 @@ def inputCustom(customValidationFunc, prompt='', default=None, blank=False, time
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     """
 
     # Validate the arguments passed to pysv.validateNum().
-    pysv._validateGenericParameters(blank, strip, allowlistRegexes, blocklistRegexes)
+    pysv._validateGenericParameters(blank, strip, allowRegexes, blockRegexes)
 
     # Our validationFunc argument must also call pysv._prevalidationCheck()
     def validationFunc(value):
-        value = pysv._prevalidationCheck(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg=None)[1]
+        value = pysv._prevalidationCheck(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, excMsg=None)[1]
         return customValidationFunc(value)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
@@ -249,7 +256,7 @@ def inputCustom(customValidationFunc, prompt='', default=None, blank=False, time
 
 
 def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+             strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, greaterThan=None, lessThan=None):
     """Prompts the user to enter a number, either an integer or a floating-point
     value. Returns an int or float value (depending on if the user entered a
@@ -261,8 +268,8 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
@@ -310,7 +317,7 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
-    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='num')
+    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='num')
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -319,7 +326,7 @@ def inputNum(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+             strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, lessThan=None, greaterThan=None):
     """Prompts the user to enter an integer value. Returns the integer as an
     int value.
@@ -330,8 +337,8 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
@@ -358,7 +365,7 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
     5
     >>> response
     5
-    >>> response = pyip.inputInt(blocklistRegexes=[r'[13579]$'])
+    >>> response = pyip.inputInt(blockRegexes=[r'[13579]$'])
     43
     This response is invalid.
     41
@@ -376,7 +383,7 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
-    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='int')
+    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='int')
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
@@ -395,7 +402,7 @@ def inputInt(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+             strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
              min=None, max=None, lessThan=None, greaterThan=None):
     """Prompts the user to enter a floating point number value.
     Returns the number as a float.
@@ -406,8 +413,8 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * min (None, int): If not None, the minimum accepted numeric value, including the minimum argument.
@@ -426,7 +433,7 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
     # Validate the arguments passed to pysv.validateNum().
     pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
-    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='float')
+    validationFunc = lambda value: pysv.validateNum(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, min=min, max=max, lessThan=lessThan, greaterThan=greaterThan, _numType='float')
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
@@ -445,7 +452,7 @@ def inputFloat(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
-                strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+                strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
                 caseSensitive=False):
     """Prompts the user to enter one of the provided choices.
     Returns the selected choice as a string.
@@ -457,8 +464,8 @@ def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=N
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * caseSensitive (bool): If True, the user must enter a choice that matches the case of the string in choices. Defaults to False.
@@ -485,11 +492,11 @@ def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=N
     """
 
     # Validate the arguments passed to pysv.validateChoice().
-    pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
+    pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
                    numbered=False, lettered=False, caseSensitive=caseSensitive)
 
     validationFunc = lambda value: pysv.validateChoice(value, choices=choices, blank=blank,
-                    strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, numbered=False, lettered=False,
+                    strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, numbered=False, lettered=False,
                     caseSensitive=False)
 
     if prompt == '_default':
@@ -501,7 +508,7 @@ def inputChoice(choices, prompt='_default', default=None, blank=False, timeout=N
 
 
 def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=None, limit=None,
-              strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+              strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
               numbered=False, lettered=False, caseSensitive=False):
     """Prompts the user to enter one of the provided choices.
     Also displays a small menu with bulleted, numbered, or lettered options.
@@ -513,8 +520,8 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -562,11 +569,11 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
     'dog'
     """
     # Validate the arguments passed to pysv.validateChoice().
-    pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
+    pysv._validateParamsFor_validateChoice(choices, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
                    numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
     validationFunc = lambda value: pysv.validateChoice(value, choices=choices, blank=blank,
-                    strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
+                    strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
                     numbered=numbered, lettered=lettered, caseSensitive=caseSensitive)
 
     if prompt == '_default':
@@ -586,7 +593,7 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
     # Since `result` could be a number or letter of the option selected, we
     # need to find the string in `choices` to return. Call pysv.validateChoice()
     # again to get it.
-    result = pysv.validateChoice(result, choices, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes,
+    result = pysv.validateChoice(result, choices, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
                                  numbered=numbered, lettered=lettered,
                                  caseSensitive=caseSensitive)
     if postValidateApplyFunc is None:
@@ -596,7 +603,7 @@ def inputMenu(choices, prompt='_default', default=None, blank=False, timeout=Non
 
 
 def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, limit=None,
-             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+             strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a date, formatted as a strptime-format in the formats list.
     Returns a datetime.date object.
 
@@ -606,8 +613,8 @@ def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, 
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -630,7 +637,7 @@ def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, 
     if formats is None:
         formats = ('%m/%d/%Y', '%m/%d/%y', '%Y/%m/%d', '%y/%m/%d', '%x')
 
-    validationFunc = lambda value: pysv.validateDate(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, formats=formats)
+    validationFunc = lambda value: pysv.validateDate(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, formats=formats)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -638,7 +645,7 @@ def inputDate(prompt='', formats=None, default=None, blank=False, timeout=None, 
 
 
 def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None,
-				  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+				  strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 				  formats=('%m/%d/%Y %H:%M:%S', '%m/%d/%y %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%y/%m/%d %H:%M:%S', '%x %H:%M:%S',
                    '%m/%d/%Y %H:%M', '%m/%d/%y %H:%M', '%Y/%m/%d %H:%M', '%y/%m/%d %H:%M', '%x %H:%M',
                    '%m/%d/%Y %H:%M:%S', '%m/%d/%y %H:%M:%S', '%Y/%m/%d %H:%M:%S', '%y/%m/%d %H:%M:%S', '%x %H:%M:%S')):
@@ -651,8 +658,8 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -666,7 +673,7 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
     >>> response
     datetime.datetime(1900, 1, 1, 12, 1)
     """
-    validationFunc = lambda value: pysv.validateDatetime(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, formats=formats)
+    validationFunc = lambda value: pysv.validateDatetime(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, formats=formats)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -674,7 +681,7 @@ def inputDatetime(prompt='', default=None, blank=False, timeout=None, limit=None
 
 
 def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
-			  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+			  strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
 			  formats=('%H:%M:%S', '%H:%M', '%X')):
     """Prompts the user to enter a date, formatted as a strptime-format in the formats list.
     Returns a datetime.time object.
@@ -685,8 +692,8 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -705,7 +712,7 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
     datetime.time(12, 1)
     """
 
-    validationFunc = lambda value: pysv.validateTime(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, formats=formats)
+    validationFunc = lambda value: pysv.validateTime(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, formats=formats)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -713,7 +720,7 @@ def inputTime(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
-               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None, returnStateName=False):
+               strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None, returnStateName=False):
     """Prompts the user to enter United States state name or abbreviation.
     Returns the state abbreviation (uness returnStateName is True, in which case the full state name in titlecase is returned.)
 
@@ -723,8 +730,8 @@ def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
     * returnStateName (bool): If True, the full state name is returned, i.e. 'California'. Otherwise, the abbreviation, i.e. 'CA'. Defaults to False.
@@ -743,7 +750,7 @@ def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
     >>> response
     'California'
     """
-    validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, returnStateName=returnStateName)
+    validationFunc = lambda value: pysv.validateState(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, returnStateName=returnStateName)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -751,7 +758,7 @@ def inputState(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
-               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+               strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a month name.
     Returns a string of the selected month name in titlecase.
 
@@ -761,8 +768,8 @@ def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -780,7 +787,7 @@ def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
     >>> response
     'March'
     """
-    validationFunc = lambda value: pysv.validateMonth(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateMonth(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -788,7 +795,7 @@ def inputMonth(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=None,
-                   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+                   strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user for a day of the week.
     Returns the day name in titlecase.
 
@@ -798,8 +805,8 @@ def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=Non
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -813,7 +820,7 @@ def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=Non
     >>> response
     'Friday'
     """
-    validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateDayOfWeek(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -821,7 +828,7 @@ def inputDayOfWeek(prompt='', default=None, blank=False, timeout=None, limit=Non
 
 
 def inputDayOfMonth(year, month, prompt='', default=None, blank=False, timeout=None, limit=None,
-                    strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+                    strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a numeric month from 1 to 28, 30, or 31
     (or 29 for leap years), depending on the given month and year.
     Returns the entered day as an integer.
@@ -834,8 +841,8 @@ def inputDayOfMonth(year, month, prompt='', default=None, blank=False, timeout=N
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -855,7 +862,7 @@ def inputDayOfMonth(year, month, prompt='', default=None, blank=False, timeout=N
     >>> response
     1
     """
-    validationFunc = lambda value: pysv.validateDayOfMonth(value, year, month, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateDayOfMonth(value, year, month, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -863,7 +870,7 @@ def inputDayOfMonth(year, month, prompt='', default=None, blank=False, timeout=N
 
 
 def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
-				strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+				strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompt the user to enter an IPv4 or IPv6 address.
     Returns the entered IP address as a string.
 
@@ -873,13 +880,13 @@ def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
-    validationFunc = lambda value: pysv.validateIp(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateIp(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -887,7 +894,7 @@ def inputIp(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 
 def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=None, limit=None,
-			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			   strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompt the user to enter a string that matches the provided regex string (or regex object) and flags.
     Returns the entered string.
 
@@ -897,13 +904,13 @@ def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=Non
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
-    validationFunc = lambda value: pysv.validateRegex(value, regex=regex, flags=flags, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateRegex(value, regex=regex, flags=flags, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -911,7 +918,7 @@ def inputRegex(regex, flags=0, prompt='', default=None, blank=False, timeout=Non
 
 
 def inputRegexStr(prompt='', default=None, blank=False, timeout=None, limit=None,
-				      strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+				      strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompt the user to enter a regular expression string. (Only Python-style
     regex strings are accepted, not Perl- or JavaScript-style.)
     Returns the entered regular expression string.
@@ -922,14 +929,14 @@ def inputRegexStr(prompt='', default=None, blank=False, timeout=None, limit=None
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
 
     """
-    validationFunc = lambda value: pysv.validateRegex(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateRegex(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -937,7 +944,7 @@ def inputRegexStr(prompt='', default=None, blank=False, timeout=None, limit=None
 
 
 def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
-		     strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+		     strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a URL.
     Returns the URL as a string.
 
@@ -947,8 +954,8 @@ def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -968,7 +975,7 @@ def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
     >>> response
     'mailto:al@inventwithpython.com'
     """
-    validationFunc = lambda value: pysv.validateURL(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateURL(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -977,7 +984,7 @@ def inputURL(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
 			   default=None, blank=False, timeout=None, limit=None,
-			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			   strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a yes/no response.
     The user can also enter y/n and use any case.
     Returns the yesVal or noVal argument (which default to 'yes' and 'no'), depending on the user's selection.
@@ -988,8 +995,8 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -1011,14 +1018,14 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
     >>> response
     'oui'
     """
-    validationFunc = lambda value: pysv.validateYesNo(value, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateYesNo(value, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
                            validationFunc=validationFunc)
 
     # If validation passes, return the value that pysv.validateYesNo() returned rather than necessarily what the user typed in.
-    result = pysv.validateYesNo(result, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    result = pysv.validateYesNo(result, yesVal=yesVal, noVal=noVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     if postValidateApplyFunc is None:
         return result
@@ -1028,7 +1035,7 @@ def inputYesNo(prompt='', yesVal='yes', noVal='no', caseSensitive=False,
 
 def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
                default=None, blank=False, timeout=None, limit=None,
-               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+               strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a True/False response.
     The user can also enter t/f and in any case.
     Returns a boolean value.
@@ -1039,8 +1046,8 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -1056,14 +1063,14 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
     >>> response
     False
     """
-    validationFunc = lambda value: pysv.validateYesNo(value, yesVal=trueVal, noVal=falseVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateYesNo(value, yesVal=trueVal, noVal=falseVal, caseSensitive=caseSensitive, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     result = _genericInput(prompt=prompt, default=default, timeout=timeout,
                            limit=limit, applyFunc=applyFunc,
                            validationFunc=validationFunc)
 
     # If the user entered a response that is compatible with trueVal or falseVal exactly, get those particular exact strings.
-    result = pysv.validateBool(result, caseSensitive=caseSensitive, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    result = pysv.validateBool(result, caseSensitive=caseSensitive, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     if postValidateApplyFunc is None:
         return result
@@ -1072,7 +1079,7 @@ def inputBool(prompt='', trueVal='True', falseVal='False', caseSensitive=False,
 
 
 def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
-             strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+             strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a 3 to 5-digit US zip code.
     Returns the zipcode as a string.
 
@@ -1082,13 +1089,13 @@ def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
-    validationFunc = lambda value: pysv.validateRegex(value, regex=r'(\d){3,5}(-\d\d\d\d)?', blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, excMsg='That is not a valid zip code.')
+    validationFunc = lambda value: pysv.validateRegex(value, regex=r'(\d){3,5}(-\d\d\d\d)?', blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, excMsg='That is not a valid zip code.')
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -1097,22 +1104,22 @@ def inputZip(prompt='', default=None, blank=False, timeout=None, limit=None,
 
 # TODO - Finish the following
 def inputName(prompt='', default=None, blank=False, timeout=None, limit=None,
-			  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			  strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
 
 
 def inputAddress(prompt='', default=None, blank=False, timeout=None, limit=None,
-				 strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+				 strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
 
 
 def inputPhone(prompt='', default=None, blank=False, timeout=None, limit=None,
-			   strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+			   strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     raise NotImplementedError()
 
 
 def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None,
-                  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+                  strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter a filename.
     Filenames can't contain \\ / : * ? " < > | or end with a space.
     Note that this validates filenames, not filepaths. The / and \\ characters are invalid for filenames.
@@ -1124,13 +1131,13 @@ def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
-    validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateFilename(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -1138,7 +1145,7 @@ def inputFilename(prompt='', default=None, blank=False, timeout=None, limit=None
 
 
 def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None,
-                  strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None,
+                  strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None,
                   mustExist=False):
     """Prompts the user to enter a filepath. If mustExist is True, then this filepath must exist on the local filesystem.
     Returns the filepath as a string.
@@ -1149,13 +1156,13 @@ def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
     """
-    validationFunc = lambda value: pysv.validateFilepath(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes, mustExist=mustExist)
+    validationFunc = lambda value: pysv.validateFilepath(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, mustExist=mustExist)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
@@ -1163,7 +1170,7 @@ def inputFilepath(prompt='', default=None, blank=False, timeout=None, limit=None
 
 
 def inputEmail(prompt='', default=None, blank=False, timeout=None, limit=None,
-               strip=None, allowlistRegexes=None, blocklistRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+               strip=None, allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
     """Prompts the user to enter an email address.
     Returns the email address as a string.
 
@@ -1173,8 +1180,8 @@ def inputEmail(prompt='', default=None, blank=False, timeout=None, limit=None,
     * timeout (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
     * limit (int): The number of tries the user has to enter valid input before the default value is returned.
     * strip (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
-    * allowlistRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
-    * blocklistRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
+    * allowRegexes (Sequence, None): A sequence of regex str that will explicitly pass validation.
+    * blockRegexes (Sequence, None): A sequence of regex str or (regex_str, error_msg_str) tuples that, if matched, will explicitly fail validation.
     * applyFunc (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
     * postValidateApplyFunc (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the input*() function to return.
 
@@ -1186,8 +1193,42 @@ def inputEmail(prompt='', default=None, blank=False, timeout=None, limit=None,
     >>> response
     'al@inventwithpython.com'
     """
-    validationFunc = lambda value: pysv.validateEmail(value, blank=blank, strip=strip, allowlistRegexes=allowlistRegexes, blocklistRegexes=blocklistRegexes)
+    validationFunc = lambda value: pysv.validateEmail(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes)
 
     return _genericInput(prompt=prompt, default=default, timeout=timeout,
                          limit=limit, applyFunc=applyFunc,
                          postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc)
+
+
+def inputPassword(prompt='', mask='*',
+                  default=None, blank=False, timeout=None, limit=None,
+                  strip='', allowRegexes=None, blockRegexes=None, applyFunc=None, postValidateApplyFunc=None):
+    """Prompts the user to enter a password. Mask characters will be displayed
+    instead of the actual characters. If correctPassword is None, then any input
+    is accepted and returned by inputPassword(). The default for strip is '' so
+    that no whitespace striping occurs.
+
+    By default, limit is set to 1, so an incorrect password attempt results in
+    raising RetryLimitException. If limit is set to None, then user is asked
+    again for a correct password forever. The wrongPasswordMsg string is displayed
+    whenever the user enters an incorrect password.
+
+    If correctPassword is set to None, all input is accepted.odo
+
+    The mask is the character used to display instead of the actual keystrokes.
+    It can be set to None (don't hide keystrokes), a blank string (don't show
+    anything as the user types), or a single-character string (show this
+    character instead of the keystroke). It can't be set to a multi-character
+    string."""
+
+    if mask is not None and len(mask) > 1:
+        raise PyInputPlusException("mask argument must be None, '', or a single-character string.")
+
+    pysv._validateGenericParameters(blank, strip, allowRegexes, blockRegexes)
+
+    validationFunc = lambda value: pysv._prevalidationCheck(value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, excMsg=None)[1]
+
+    return _genericInput(prompt=prompt, default=default, timeout=timeout,
+                         limit=limit, applyFunc=applyFunc,
+                         postValidateApplyFunc=postValidateApplyFunc, validationFunc=validationFunc,
+                         passwordMask=mask)
