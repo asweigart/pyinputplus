@@ -6,24 +6,8 @@
 Welcome to PyInputPlus's documentation!
 =======================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
 
-   api
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-About
-=====
-
-PyInputPlus is a Python 2 and 3 module to provide input()- and raw_input()-like functions with additional validation features.
+PyInputPlus is a Python 3 and 2 module to provide ``input()`` and ``raw_input()`` like functions with additional validation features. PyInputPlus was created and is maintained by Al Sweigart.
 
 This module relies heavily on PySimpleValidate (also by Al) for the actual
 validation. PyInputPlus provides interaction with the user through stdin/stdout
@@ -33,8 +17,15 @@ while PySimpleValidate provides the functions that validate the user's input.
 Installation
 ============
 
+You can install PyInputPlus with the pip tool. On Windows, run the following from a Command Prompt window:
+
     pip install pyinputplus
 
+On macOS and Linux, run the following from a Terminal window:
+
+    pip3 install pyinputplus
+
+The PySimpleValidate and stdiomask modules will also be installed as a part of PyInputPlus's installation.
 
 Quick Start
 ===========
@@ -45,18 +36,66 @@ A cleaned up version of the input is returned.
 
 It's recommended to import PyInputPlus with the shorter name ``pyip``.
 
-    >>> import pysimplevalidate as pysv
+    >>> import pyinputplus as pyip
 
 PyInputPlus's functions all begin with the word ``input``, such as ``inputStr()`` or ``inputDate()``. Collectively, they are referred to in this documentation as the ``input*()`` functions.
 
-inputStr()
-----------
+You can ask the user for an integer with ``inputInt()``, and the return value will be an integer instead of a string like ``input()`` would return:
 
-The ``inputStr()`` function is the least restrictive function: it accepts all input (except no/blank input). Use this function when you'd like the built-in ``input()`` function but with PyInputPlus's additional features, such as these keyword arguments:
+    >>> response = pyip.inputInt()
+    forty two
+    'forty two' is not an integer.
+    42
+    >>> response
+    42
+
+You could specify a prompt, along with any restrictions you'd like to impose:
+
+    >>> response = pyip.inputInt(prompt='Enter your age: ', min=1)
+    Enter your age: 0
+    Number must be at minimum 1.
+    Enter your age: 2
+    >>> response
+    2
+
+There are several functions for different common types of data:
+
+    >>> response = pyip.inputEmail()
+    alinventwithpython.com
+    'alinventwithpython.com' is not a valid email address.
+    al@inventwithpython.com
+    >>> response
+    'al@inventwithpython.com'
+
+You could also present a small menu of options to the user:
+
+    >>> response = pyip.inputMenu(['cat', 'dog', 'moose'])
+    Please select one of the following:
+    * cat
+    * dog
+    * moose
+    cat
+    >>> response
+    'cat'
+    >>> response = pyip.inputMenu(['cat', 'dog', 'moose'], numbered=True)
+    Please select one of the following:
+    1. cat
+    2. dog
+    3. moose
+    1
+    >>> response
+    'cat'
+
+See the list of functions to get an idea of the kinds of information you can get from the user.
+
+Common input*() Parameters
+--------------------------
+
+The following parameters are available for all of the ``input*()`` functions:
 
 * ``prompt`` (str): The text to display before each prompt for user input. Identical to the prompt argument for Python's raw_input() and input() functions.
 * ``default`` (str, None): A default value to use should the user time out or exceed the number of tries to enter valid input.
-* ``blank`` (bool): If True, a blank string will be accepted. Defaults to False.
+* ``blank`` (bool): If True, a blank string will be accepted. Defaults to ``False``.
 * ``timeout`` (int, float): The number of seconds since the first prompt for input after which a TimeoutException is raised the next time the user enters input.
 * ``limit`` (int): The number of tries the user has to enter valid input before the default value is returned.
 * ``strip`` (bool, str, None): If None, whitespace is stripped from value. If a str, the characters in it are stripped from value. If False, nothing is stripped.
@@ -65,7 +104,13 @@ The ``inputStr()`` function is the least restrictive function: it accepts all in
 * ``applyFunc`` (Callable, None): An optional function that is passed the user's input, and returns the new value to use as the input.
 * ``postValidateApplyFunc`` (Callable, None): An optional function that is passed the user's input after it has passed validation, and returns a transformed version for the ``input*()`` function to return.
 
-These keyword arguments apply to all of PyInputPlus's functions.
+
+inputStr()
+----------
+
+The ``inputStr()`` function is the least restrictive function: it accepts all input (except no/blank input). Use this function when you'd like the built-in ``input()`` function but with PyInputPlus's additional features.
+
+Example usage:
 
     >>> response = pyip.inputStr()
     Hello
@@ -95,7 +140,7 @@ should return.
     >>> def isEven(value):
     ...     if float(value) % 2 != 0:
     ...         raise Exception('This is not an even value.')
-    ... 
+    ...
     >>> response = pyip.inputCustom(isEven)
     5
     This is not an even value.
@@ -240,3 +285,8 @@ inputFilename(), inputFilepath()
 
 TODO
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   api
