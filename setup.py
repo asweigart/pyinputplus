@@ -1,19 +1,14 @@
+import re, io
 from setuptools import setup, find_packages
-import os
-import re
 
 # Load version from module (without loading the whole module)
-with open('src/pyinputplus/__init__.py', 'r') as fd:
+with open('src/pyinputplus/__init__.py', 'r') as fo:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-                        fd.read(), re.MULTILINE).group(1)
+                        fo.read(), re.MULTILINE).group(1)
 
-here = os.path.abspath(os.path.dirname(__file__))
-
-# Get the long description from the README file
-with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
-    long_description = f.read()
-
-
+# Read in the README.md for the long description.
+with io.open('README.md', encoding='utf-8') as fo:
+    long_description = fo.read()
 
 setup(
     name='PyInputPlus',
@@ -48,5 +43,6 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
 )

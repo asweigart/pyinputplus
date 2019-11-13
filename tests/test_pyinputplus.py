@@ -24,7 +24,7 @@ originalStdout = sys.stdout
 
 # TODO - work in progress
 
-def pauseThenType(text, pauseLen=0.05):
+def pauseThenType(text, pauseLen=0.01):
     def inner(text):
         time.sleep(pauseLen)
         keyboard.type(text)
@@ -554,6 +554,286 @@ class test_main(unittest.TestCase):
         # Test that typing too many backspace characters causes you to start over entering the password.
         pauseThenType('swordfish' + ('\b' * 20) + 'mary\n')
         self.assertEqual(pyip.inputPassword(), 'mary')
+
+
+
+    def _testValidationParameters(self, func):
+        # Test `blank` parameter:
+        func('', blank=True)
+
+        with self.assertRaises(pyip.ValidationException):
+            func('') # Test that `blank` is set to False (not allowed) by default.
+
+        with self.assertRaises(pyip.ValidationException):
+            func('', blank=False)
+
+        # Test `allowRegexes` parameter:
+        func('xyz', allowRegexes=['xyz'])
+        func('1234567890', allowRegexes=[r'\d+'])
+        func('1234567890', allowRegexes=['xyz', r'\d+']) # Test using multiple regexes
+
+        # Test `blockRegexes` parameter:
+        with self.assertRaises(pyip.ValidationException):
+            func('xyz', blockRegexes=['xyz'])
+        with self.assertRaises(pyip.ValidationException):
+            func('1234567890', blockRegexes=[r'\d+'])
+        with self.assertRaises(pyip.ValidationException):
+            func('0xyz', blockRegexes=[r'\d+'])
+        with self.assertRaises(pyip.ValidationException):
+            func('xyz0', blockRegexes=[r'\d+'])
+        with self.assertRaises(pyip.ValidationException):
+            func('xy0z', blockRegexes=[r'\d+'])
+
+        # Test `strip` parameter:
+        with self.assertRaises(pyip.ValidationException):
+            func(' ') # Test that whitespace is stripped by default.
+
+        func('aaa', strip='a', blank=True)
+        func(' ', strip=None, blank=True) # None arg will strip whitespace.
+        func('', strip='', blank=True)
+        func('abcacbcabbacbca', strip='abc', blank=True)
+
+        """
+        # TODO - PySimpleValidate doesn't have applyFunc or postValidateApplyFunc yet.
+        # Test `applyFunc` parameter:
+        func('xyz', applyFunc=lambda: '', blank=True)
+
+        # Test `postValidateApplyFunc` parameter:
+        self.assertEquals(func('', postValidationApplyFunc=lambda: 'xyz', blank=True), 'xyz')
+        """
+
+
+    # TODO - test all the extra parameters such as blank, etc.
+    def test_validateStr(self):
+        pyip.validateStr('hello') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateStr('', blank=False)
+
+        self._testValidationParameters(pyip.validateNum)
+
+
+    def test_validateNum(self):
+        pyip.validateNum('42') # Test that a valid value doesn't raise an exception.
+        pyip.validateNum('42.0')
+        pyip.validateNum('-42')
+        pyip.validateNum('-42.0')
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateNum('abc')
+
+        self._testValidationParameters(pyip.validateNum)
+
+
+    def test_validateInt(self):
+        pyip.validateInt('42') # Test that a valid value doesn't raise an exception.
+        pyip.validateInt('-42')
+        pyip.validateInt('42.0')
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateInt('42.1')
+
+        self._testValidationParameters(pyip.validateInt)
+
+
+    def test_validateFloat(self):
+        pyip.validateFloat('42.1') # Test that a valid value doesn't raise an exception.
+        pyip.validateFloat('-42.1')
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateFloat('abc')
+
+        self._testValidationParameters(pyip.validateFloat)
+
+
+    def test_validateChoice(self):
+        pyip.validateChoice('dog',['dog', 'cat']) # Test that a valid value doesn't raise an exception.
+        # TODO add tests for other cases
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateChoice('moose',['dog', 'cat'])
+
+        #self._testValidationParameters(pyip.validateChoice) # TODO - validation Functions with extra args won't work with this function yet
+
+
+    def test_validateTime(self):
+        pyip.validateTime('12:00:00') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateTime('abc')
+
+        #self._testValidationParameters(pyip.validateTime) # TODO - validation Functions with extra args won't work with this function yet
+
+
+    def test_validateDate(self):
+        pyip.validateDate('1/1/1900') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateDate('abc')
+
+        #self._testValidationParameters(pyip.validateDate) # TODO - validation Functions with extra args won't work with this function yet
+
+
+    def test_validateDatetime(self):
+        pyip.validateDatetime('1/1/1900 12:00:00') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateDatetime('abc')
+
+        #self._testValidationParameters(pyip.validateDatetime) # TODO - validation Functions with extra args won't work with this function yet
+
+
+    def test_validateFilename(self):
+        pyip.validateFilename('hello.txt') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateFilename('?')
+
+        self._testValidationParameters(pyip.validateFilename)
+
+
+    def test_validateFilepath(self):
+        pyip.validateFilepath('/usr') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateFilepath('?')
+
+        self._testValidationParameters(pyip.validateFilepath)
+
+
+    def test_validateIP(self):
+        pyip.validateIP('127.0.0.1') # Test that a valid value doesn't raise an exception.
+        pyip.validateIP('1:2:3:4:5:6::8') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateIP('abc')
+
+        self._testValidationParameters(pyip.validateIP)
+
+
+    def test_validateIPv4(self):
+        pyip.validateIPv4('127.0.0.1') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateIPv4('abc')
+
+        self._testValidationParameters(pyip.validateIPv4)
+
+
+    def test_validateIPv6(self):
+        pyip.validateIPv6('1:2:3:4:5:6::8') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateIPv6('abc')
+
+        self._testValidationParameters(pyip.validateIPv6)
+
+
+    def test_validateRegex(self):
+        pyip.validateRegex('123', r'\d+') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateRegex('abc', r'\d+')
+
+        #self._testValidationParameters(pyip.validateRegex) # TODO - validation Functions with extra args won't work with this function yet
+
+
+    def test_validateRegexStr(self):
+        pyip.validateRegexStr('abc') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateRegexStr('(')
+
+        self._testValidationParameters(pyip.validateRegexStr)
+
+
+    def test_validateURL(self):
+        pyip.validateURL('https://inventwithpython.com') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateURL('blah blah blah')
+
+        self._testValidationParameters(pyip.validateURL)
+
+
+    def test_validateEmail(self):
+        pyip.validateEmail('abc@example.com') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateEmail('abc')
+
+        self._testValidationParameters(pyip.validateEmail)
+
+
+    def test_validateYesNo(self):
+        pyip.validateYesNo('Yes') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateYesNo('abc')
+
+        self._testValidationParameters(pyip.validateYesNo)
+
+
+    def test_validateBool(self):
+        pyip.validateBool('True') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateBool('abc')
+
+        self._testValidationParameters(pyip.validateBool)
+
+
+    def test_validateUSState(self):
+        pyip.validateUSState('CA') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateUSState('abc')
+
+        self._testValidationParameters(pyip.validateUSState)
+
+
+    """
+    def test_validateName(self):
+        pass # The validation function isn't implemented yet.
+
+    def test_validateAddress(self):
+        pass # The validation function isn't implemented yet.
+
+
+    def test_validatePhone(self):
+        pass # The validation function isn't implemented yet.
+    """
+
+    def test_validateMonth(self):
+        # Test that a valid value doesn't raise an exception.
+        for month in ('jan', 'january', 'feb', 'february', 'mar', 'march', 'apr', 'april', 'may', 'may', 'jun', 'june', 'jul', 'july', 'aug', 'august', 'sep', 'september', 'oct', 'october', 'nov', 'november', 'dec', 'december'):
+            assert pyip.validateMonth(month.lower()).startswith(month.title())
+            assert pyip.validateMonth(month.upper()).startswith(month.title())
+            assert pyip.validateMonth(month.title()).startswith(month.title())
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateMonth('abc')
+
+        self._testValidationParameters(pyip.validateMonth)
+
+
+    def test_validateDayOfWeek(self):
+        pyip.validateDayOfWeek('Monday') # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateDayOfWeek('abc')
+
+        self._testValidationParameters(pyip.validateDayOfWeek)
+
+
+    def test_validateDayOfMonth(self):
+        pyip.validateDayOfMonth('1', 1900, 12) # Test that a valid value doesn't raise an exception.
+
+        with self.assertRaises(pyip.ValidationException):
+            pyip.validateDayOfMonth('abc', 1900, 12)
+
+        #self._testValidationParameters(pyip.validateDayOfMonth) # TODO - validation Functions with extra args won't work with this function yet
+
 
 
 
