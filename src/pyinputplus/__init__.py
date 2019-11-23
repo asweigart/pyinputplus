@@ -10,11 +10,12 @@ A Python 2 and 3 module to provide input()- and raw_input()-like functions with 
 from __future__ import absolute_import, division, print_function
 
 import time
+from typing import Union, Any, Optional, Callable, Sequence, Pattern
 
-import pysimplevalidate as pysv
-import stdiomask
+import pysimplevalidate as pysv # type: ignore
+import stdiomask # type: ignore
 
-__version__ = "0.2.8"
+__version__ = "0.2.8"  # type: str
 
 
 class PyInputPlusException(Exception):
@@ -77,6 +78,7 @@ def parameters():
 
 
 def _checkLimitAndTimeout(startTime, timeout, tries, limit):
+    # type: (float, Optional[float], int, Optional[int]) -> Union[None, TimeoutException, RetryLimitException]
     """Returns a ``TimeoutException`` or ``RetryLimitException`` if the user has
     exceeded those limits, otherwise returns ``None``.
 
@@ -107,6 +109,7 @@ def _genericInput(
     postValidateApplyFunc=None,
     passwordMask=None,
 ):
+    # type: (str, Any, Optional[float], Optional[int], Optional[Callable], Optional[Callable], Optional[Callable], Optional[str]) -> Any
     """This function is used by the various input*() functions to handle the
     common operations of each input function: displaying prompts, collecting input,
     handling timeouts, etc.
@@ -126,12 +129,10 @@ def _genericInput(
     * ``passwordMask`` (str, None): An optional argument. If not ``None``, this ``getpass.getpass()`` is used instead of
     """
 
-    # NOTE: _genericInput() always returns a string. Any type casting must be done by the caller.
+    # NOTE: _genericInput() can return any type of value. Any type casting must be done by the caller.
     # Validate the parameters.
     if not isinstance(prompt, str):
         raise PyInputPlusException("prompt argument must be a str")
-    if not isinstance(default, (str, type(None))):
-        raise PyInputPlusException("default argument must be a str or None")
     if not isinstance(timeout, (int, float, type(None))):
         raise PyInputPlusException("timeout argument must be an int or float")
     if not isinstance(limit, (int, type(None))):
@@ -144,7 +145,7 @@ def _genericInput(
         raise PyInputPlusException(
             "postValidateApplyFunc argument must be a function or None"
         )
-    if passwordMask is not None and len(passwordMask) > 1:
+    if passwordMask is not None and (not isinstance(passwordMask, str) or len(passwordMask) > 1):
         raise PyInputPlusException(
             "passwordMask argument must be None or a single-character string."
         )
@@ -223,6 +224,7 @@ def inputStr(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter any string input. This is similar to Python's ``input()``
     and ``raw_input()`` functions, but with PyInputPlus's additional features
     such as timeouts, retry limits, stripping, allowlist/blocklist, etc.
@@ -263,6 +265,7 @@ def inputStr(
 
 
 def inputCustom(
+    # type: (Callable, str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     customValidationFunc,
     prompt="",
     default=None,
@@ -325,6 +328,7 @@ def inputCustom(
 
 
 def inputNum(
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], Optional[float], Optional[float], Optional[float], Optional[float]) -> Any
     prompt="",
     default=None,
     blank=False,
@@ -346,10 +350,10 @@ def inputNum(
 
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
-    * ``min`` (None, int): If not ``None``, the minimum accepted numeric value, including the minimum argument.
-    * ``max`` (None, int): If not ``None``, the maximum accepted numeric value, including the maximum argument.
-    * ``greaterThan`` (None, int): If not ``None``, the minimum accepted numeric value, not including the ``greaterThan`` argument.
-    * ``lessThan`` (None, int): If not ``None``, the maximum accepted numeric value, not including the ``lessThan`` argument.
+    * ``min`` (None, float): If not ``None``, the minimum accepted numeric value, including the minimum argument.
+    * ``max`` (None, float): If not ``None``, the maximum accepted numeric value, including the maximum argument.
+    * ``greaterThan`` (None, float): If not ``None``, the minimum accepted numeric value, not including the ``greaterThan`` argument.
+    * ``lessThan`` (None, float): If not ``None``, the maximum accepted numeric value, not including the ``lessThan`` argument.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputNum()
@@ -433,15 +437,16 @@ def inputInt(
     lessThan=None,
     greaterThan=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], Optional[float], Optional[float], Optional[float], Optional[float]) -> Any
     """Prompts the user to enter an integer value. Returns the integer as an
     int value.
 
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
-    * ``min`` (None, int): If not ``None``, the minimum accepted numeric value, including the minimum argument.
-    * ``max`` (None, int): If not ``None``, the maximum accepted numeric value, including the maximum argument.
-    * ``greaterThan`` (None, int): If not ``None``, the minimum accepted numeric value, not including the ``greaterThan`` argument.
-    * ``lessThan`` (None, int): If not ``None``, the maximum accepted numeric value, not including the ``lessThan`` argument.
+    * ``min`` (None, float): If not ``None``, the minimum accepted numeric value, including the minimum argument.
+    * ``max`` (None, float): If not ``None``, the maximum accepted numeric value, including the maximum argument.
+    * ``greaterThan`` (None, float): If not ``None``, the minimum accepted numeric value, not including the ``greaterThan`` argument.
+    * ``lessThan`` (None, float): If not ``None``, the maximum accepted numeric value, not including the ``lessThan`` argument.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputInt()
@@ -532,15 +537,16 @@ def inputFloat(
     lessThan=None,
     greaterThan=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], Optional[float], Optional[float], Optional[float], Optional[float]) -> Any
     """Prompts the user to enter a floating point number value.
     Returns the number as a float.
 
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
-    * ``min`` (None, int): If not ``None``, the minimum accepted numeric value, including the minimum argument.
-    * ``max`` (None, int): If not ``None``, the maximum accepted numeric value, including the maximum argument.
-    * ``greaterThan`` (None, int): If not ``None``, the minimum accepted numeric value, not including the ``greaterThan`` argument.
-    * ``lessThan`` (None, int): If not ``None``, the maximum accepted numeric value, not including the ``lessThan`` argument.
+    * ``min`` (None, float): If not ``None``, the minimum accepted numeric value, including the minimum argument.
+    * ``max`` (None, float): If not ``None``, the maximum accepted numeric value, including the maximum argument.
+    * ``greaterThan`` (None, float): If not ``None``, the minimum accepted numeric value, not including the ``greaterThan`` argument.
+    * ``lessThan`` (None, float): If not ``None``, the maximum accepted numeric value, not including the ``lessThan`` argument.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputFloat()
@@ -603,6 +609,7 @@ def inputChoice(
     postValidateApplyFunc=None,
     caseSensitive=False,
 ):
+    # type: (Sequence[str], str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], bool) -> Any
     """Prompts the user to enter one of the provided choices.
     Returns the selected choice as a string.
 
@@ -686,6 +693,7 @@ def inputMenu(
     lettered=False,
     caseSensitive=False,
 ):
+    # type: (Sequence[str], str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], bool, bool, bool) -> Any
     """Prompts the user to enter one of the provided choices.
     Also displays a small menu with bulleted, numbered, or lettered options.
     Returns the selected choice as a string.
@@ -815,6 +823,7 @@ def inputDate(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Union[str, Sequence[str]], Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a date, formatted as a strptime-format in the formats list.
     Returns a datetime.date object.
 
@@ -841,11 +850,11 @@ def inputDate(
 
     validationFunc = lambda value: pysv.validateDate(
         value,
+        formats=formats,
         blank=blank,
         strip=strip,
         allowRegexes=allowRegexes,
         blockRegexes=blockRegexes,
-        formats=formats,
     )
 
     return _genericInput(
@@ -861,15 +870,6 @@ def inputDate(
 
 def inputDatetime(
     prompt="",
-    default=None,
-    blank=False,
-    timeout=None,
-    limit=None,
-    strip=None,
-    allowRegexes=None,
-    blockRegexes=None,
-    applyFunc=None,
-    postValidateApplyFunc=None,
     formats=(
         "%m/%d/%Y %H:%M:%S",
         "%m/%d/%y %H:%M:%S",
@@ -887,7 +887,17 @@ def inputDatetime(
         "%y/%m/%d %H:%M:%S",
         "%x %H:%M:%S",
     ),
+    default=None,
+    blank=False,
+    timeout=None,
+    limit=None,
+    strip=None,
+    allowRegexes=None,
+    blockRegexes=None,
+    applyFunc=None,
+    postValidateApplyFunc=None,
 ):
+    # type: (str, Union[str, Sequence[str]], Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a datetime, formatted as a strptime-format in the formats list.
     Returns a ``datetime.datetime`` object.
 
@@ -905,11 +915,11 @@ def inputDatetime(
     """
     validationFunc = lambda value: pysv.validateDatetime(
         value,
+        formats=formats,
         blank=blank,
         strip=strip,
         allowRegexes=allowRegexes,
         blockRegexes=blockRegexes,
-        formats=formats,
     )
 
     return _genericInput(
@@ -925,6 +935,7 @@ def inputDatetime(
 
 def inputTime(
     prompt="",
+    formats=("%H:%M:%S", "%H:%M", "%X"),
     default=None,
     blank=False,
     timeout=None,
@@ -934,8 +945,8 @@ def inputTime(
     blockRegexes=None,
     applyFunc=None,
     postValidateApplyFunc=None,
-    formats=("%H:%M:%S", "%H:%M", "%X"),
 ):
+    # type: (str, Union[str, Sequence[str]], Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a date, formatted as a strptime-format in the formats list.
     Returns a ``datetime.time`` object.
 
@@ -958,11 +969,11 @@ def inputTime(
 
     validationFunc = lambda value: pysv.validateTime(
         value,
+        formats=formats,
         blank=blank,
         strip=strip,
         allowRegexes=allowRegexes,
         blockRegexes=blockRegexes,
-        formats=formats,
     )
 
     return _genericInput(
@@ -989,6 +1000,7 @@ def inputUSState(
     postValidateApplyFunc=None,
     returnStateName=False,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], bool) -> Any
     """Prompts the user to enter United States state name or abbreviation.
     Returns the state abbreviation (unless ``returnStateName`` is ``True``, in which case the full state name in titlecase is returned.)
 
@@ -1042,6 +1054,7 @@ def inputMonth(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a month name.
     Returns a string of the selected month name in titlecase.
 
@@ -1095,6 +1108,7 @@ def inputDayOfWeek(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user for a day of the week.
     Returns the day name in titlecase.
 
@@ -1146,6 +1160,7 @@ def inputDayOfMonth(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (int, int, str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a numeric month from 1 to 28, 30, or 31
     (or 29 for leap years), depending on the given month and year.
     Returns the entered day as an integer.
@@ -1204,6 +1219,7 @@ def inputIp(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompt the user to enter an IPv4 or IPv6 address.
     Returns the entered IP address as a string.
 
@@ -1243,6 +1259,7 @@ def inputRegex(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (Union[str, Pattern], int, str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompt the user to enter a string that matches the provided regex string (or regex object) and flags.
     Returns the entered string.
 
@@ -1281,6 +1298,7 @@ def inputRegexStr(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompt the user to enter a regular expression string. (Only Python-style
     regex strings are accepted, not Perl- or JavaScript-style.)
     Returns the entered regular expression string.
@@ -1319,6 +1337,7 @@ def inputURL(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a URL.
     Returns the URL as a string.
 
@@ -1374,6 +1393,7 @@ def inputYesNo(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, str, str, bool, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a yes/no response.
     The user can also enter y/n and use any case.
     Returns the ``yesVal`` or ``noVal`` argument (which default to ``'yes'`` and ``'no'``), depending on the user's selection.
@@ -1451,6 +1471,7 @@ def inputBool(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, str, str, bool, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a True/False response.
     The user can also enter t/f and in any case.
     Returns a boolean value.
@@ -1517,6 +1538,7 @@ def inputZip(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a 3 to 5-digit US zip code.
     Returns the zipcode as a string.
 
@@ -1556,6 +1578,7 @@ def inputName(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     raise NotImplementedError()
 
 
@@ -1571,6 +1594,7 @@ def inputAddress(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     raise NotImplementedError()
 
 
@@ -1586,6 +1610,7 @@ def inputPhone(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     raise NotImplementedError()
 
 
@@ -1601,6 +1626,7 @@ def inputFilename(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a filename.
     Filenames can't contain \\ / : * ? " < > | or end with a space.
     Note that this validates filenames, not filepaths. The / and \\ characters are invalid for filenames.
@@ -1640,6 +1666,7 @@ def inputFilepath(
     postValidateApplyFunc=None,
     mustExist=False,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], bool) -> Any
     """Prompts the user to enter a filepath. If mustExist is True, then this filepath must exist on the local filesystem.
     Returns the filepath as a string.
 
@@ -1677,6 +1704,7 @@ def inputEmail(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter an email address.
     Returns the email address as a string.
 
@@ -1722,6 +1750,7 @@ def inputPassword(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (str, str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter a password. Mask characters will be displayed
     instead of the actual characters. If ``correctPassword`` is ``None``, then any input
     is accepted and returned by ``inputPassword()``. The default for strip is ``''`` so
