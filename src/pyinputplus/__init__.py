@@ -1306,7 +1306,7 @@ def inputRegexStr(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
     """
-    validationFunc = lambda value: pysv.validateRegex(
+    validationFunc = lambda value: pysv.validateRegexStr(
         value,
         blank=blank,
         strip=strip,
