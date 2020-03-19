@@ -22,7 +22,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     test_suite='tests',
-    install_requires=['pysimplevalidate>=0.2.7', 'stdiomask>=0.0.3'],
+    install_requires=['pysimplevalidate>=0.2.7', 'stdiomask>=0.0.3', 'typing;python_version<"3.5"'],
     keywords="input validation text gui message box",
     classifiers=[
         'Development Status :: 4 - Beta',

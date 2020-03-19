@@ -1306,7 +1306,7 @@ def inputRegexStr(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
     """
-    validationFunc = lambda value: pysv.validateRegex(
+    validationFunc = lambda value: pysv.validateRegexStr(
         value,
         blank=blank,
         strip=strip,
@@ -1830,9 +1830,9 @@ for functionName in (
     "validateDayOfMonth",
 ):
     exec(
-        f"""def {functionName}(value, *args, **kwargs):
+        """def %s(value, *args, **kwargs):
     try:
-        return pysv.{functionName}(value, *args, **kwargs)
+        return pysv.%s(value, *args, **kwargs)
     except pysv.ValidationException as e:
-        raise ValidationException(str(e))"""
+        raise ValidationException(str(e))""" % (functionName, functionName)
     )
