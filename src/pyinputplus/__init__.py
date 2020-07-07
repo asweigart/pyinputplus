@@ -1226,7 +1226,7 @@ def inputIp(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
     """
-    validationFunc = lambda value: pysv.validateIp(
+    validationFunc = lambda value: pysv.validateIP(
         value,
         blank=blank,
         strip=strip,
