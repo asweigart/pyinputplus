@@ -15,7 +15,7 @@ from typing import Union, Any, Optional, Callable, Sequence, Pattern
 import pysimplevalidate as pysv # type: ignore
 import stdiomask # type: ignore
 
-__version__ = "0.2.9"  # type: str
+__version__ = "0.2.10"  # type: str
 
 
 class PyInputPlusException(Exception):
@@ -769,17 +769,18 @@ def inputMenu(
 
     if prompt == "_default":
         prompt = "Please select one of the following:\n"
-        if numbered:
-            prompt += "\n".join(
-                [str(i + 1) + ". " + choices[i] for i in range(len(choices))]
-            )
-        elif lettered:
-            prompt += "\n".join(
-                [chr(65 + i) + ". " + choices[i] for i in range(len(choices))]
-            )
-        else:
-            prompt += "\n".join(["* " + choice for choice in choices])
-        prompt += "\n"
+
+    if numbered:
+        prompt += "\n".join(
+            [str(i + 1) + ". " + choices[i] for i in range(len(choices))]
+        )
+    elif lettered:
+        prompt += "\n".join(
+            [chr(65 + i) + ". " + choices[i] for i in range(len(choices))]
+        )
+    else:
+        prompt += "\n".join(["* " + choice for choice in choices])
+    prompt += "\n"
 
     result = _genericInput(
         prompt=prompt,
@@ -1207,7 +1208,7 @@ def inputDayOfMonth(
     )
 
 
-def inputIp(
+def inputIP(
     prompt="",
     default=None,
     blank=False,
@@ -1226,7 +1227,7 @@ def inputIp(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
     """
-    validationFunc = lambda value: pysv.validateIp(
+    validationFunc = lambda value: pysv.validateIP(
         value,
         blank=blank,
         strip=strip,
