@@ -6,7 +6,8 @@ name = "pypi"
 [packages]
 pynput = "*"
 coverage = "*"
-pyinputplus = {editable = true, path = "."}
+pyinputplus = {editable = true,path = "."}
+pysimplevalidate = "*"
 
 [dev-packages]
 
