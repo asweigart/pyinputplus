@@ -12,10 +12,10 @@ from __future__ import absolute_import, division, print_function
 import time
 from typing import Union, Any, Optional, Callable, Sequence, Pattern
 
-import pysimplevalidate as pysv # type: ignore
-import stdiomask # type: ignore
+import pysimplevalidate as pysv  # type: ignore
+import stdiomask  # type: ignore
 
-__version__ = "0.2.10"  # type: str
+__version__ = "0.2.11"  # type: str
 
 
 class PyInputPlusException(Exception):
@@ -142,13 +142,9 @@ def _genericInput(
     if not (callable(applyFunc) or applyFunc is None):
         raise PyInputPlusException("applyFunc argument must be a function or None")
     if not (callable(postValidateApplyFunc) or postValidateApplyFunc is None):
-        raise PyInputPlusException(
-            "postValidateApplyFunc argument must be a function or None"
-        )
+        raise PyInputPlusException("postValidateApplyFunc argument must be a function or None")
     if passwordMask is not None and (not isinstance(passwordMask, str) or len(passwordMask) > 1):
-        raise PyInputPlusException(
-            "passwordMask argument must be None or a single-character string."
-        )
+        raise PyInputPlusException("passwordMask argument must be None or a single-character string.")
 
     startTime = time.time()
     tries = 0
@@ -245,12 +241,7 @@ def inputStr(
     pysv._validateGenericParameters(blank, strip, allowRegexes, blockRegexes)
 
     validationFunc = lambda value: pysv._prevalidationCheck(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
-        excMsg=None,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, excMsg=None,
     )[1]
 
     return _genericInput(
@@ -265,7 +256,6 @@ def inputStr(
 
 
 def inputCustom(
-    # type: (Callable, str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     customValidationFunc,
     prompt="",
     default=None,
@@ -278,6 +268,7 @@ def inputCustom(
     applyFunc=None,
     postValidateApplyFunc=None,
 ):
+    # type: (Callable, str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
     """Prompts the user to enter input. This is similar to Python's ``input()``
     and ``raw_input()`` functions, but with PyInputPlus's additional features
     such as timeouts, retry limits, stripping, allowlist/blocklist, etc.
@@ -307,12 +298,7 @@ def inputCustom(
     # Our validationFunc argument must also call pysv._prevalidationCheck()
     def validationFunc(value):
         value = pysv._prevalidationCheck(
-            value,
-            blank=blank,
-            strip=strip,
-            allowRegexes=allowRegexes,
-            blockRegexes=blockRegexes,
-            excMsg=None,
+            value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, excMsg=None,
         )[1]
         return customValidationFunc(value)
 
@@ -328,7 +314,6 @@ def inputCustom(
 
 
 def inputNum(
-    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], Optional[float], Optional[float], Optional[float], Optional[float]) -> Any
     prompt="",
     default=None,
     blank=False,
@@ -344,6 +329,8 @@ def inputNum(
     greaterThan=None,
     lessThan=None,
 ):
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], Optional[float], Optional[float], Optional[float], Optional[float]) -> Any
+
     """Prompts the user to enter a number, either an integer or a floating-point
     value. Returns an int or float value (depending on if the user entered a
     decimal in their input.)
@@ -393,9 +380,7 @@ def inputNum(
     """
 
     # Validate the arguments passed to pysv.validateNum().
-    pysv._validateParamsFor_validateNum(
-        min=min, max=max, lessThan=lessThan, greaterThan=greaterThan
-    )
+    pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
     validationFunc = lambda value: pysv.validateNum(
         value,
@@ -483,9 +468,7 @@ def inputInt(
     <class 'int'>
     """
     # Validate the arguments passed to pysv.validateNum().
-    pysv._validateParamsFor_validateNum(
-        min=min, max=max, lessThan=lessThan, greaterThan=greaterThan
-    )
+    pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
     validationFunc = lambda value: pysv.validateNum(
         value,
@@ -557,9 +540,7 @@ def inputFloat(
     <class 'float'>
     """
     # Validate the arguments passed to pysv.validateNum().
-    pysv._validateParamsFor_validateNum(
-        min=min, max=max, lessThan=lessThan, greaterThan=greaterThan
-    )
+    pysv._validateParamsFor_validateNum(min=min, max=max, lessThan=lessThan, greaterThan=greaterThan)
 
     validationFunc = lambda value: pysv.validateNum(
         value,
@@ -771,13 +752,9 @@ def inputMenu(
         prompt = "Please select one of the following:\n"
 
     if numbered:
-        prompt += "\n".join(
-            [str(i + 1) + ". " + choices[i] for i in range(len(choices))]
-        )
+        prompt += "\n".join([str(i + 1) + ". " + choices[i] for i in range(len(choices))])
     elif lettered:
-        prompt += "\n".join(
-            [chr(65 + i) + ". " + choices[i] for i in range(len(choices))]
-        )
+        prompt += "\n".join([chr(65 + i) + ". " + choices[i] for i in range(len(choices))])
     else:
         prompt += "\n".join(["* " + choice for choice in choices])
     prompt += "\n"
@@ -850,12 +827,7 @@ def inputDate(
         formats = ("%m/%d/%Y", "%m/%d/%y", "%Y/%m/%d", "%y/%m/%d", "%x")
 
     validationFunc = lambda value: pysv.validateDate(
-        value,
-        formats=formats,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, formats=formats, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -915,12 +887,7 @@ def inputDatetime(
     datetime.datetime(1900, 1, 1, 12, 1)
     """
     validationFunc = lambda value: pysv.validateDatetime(
-        value,
-        formats=formats,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, formats=formats, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -969,12 +936,7 @@ def inputTime(
     """
 
     validationFunc = lambda value: pysv.validateTime(
-        value,
-        formats=formats,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, formats=formats, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1079,11 +1041,7 @@ def inputMonth(
     # TODO add returnNumber and returnAbbreviation parameters.
 
     validationFunc = lambda value: pysv.validateMonth(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1129,11 +1087,7 @@ def inputDayOfWeek(
     # TODO - add returnNumber and return abbreivation parameters.
 
     validationFunc = lambda value: pysv.validateDayOfWeek(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1188,13 +1142,7 @@ def inputDayOfMonth(
     1
     """
     validationFunc = lambda value: pysv.validateDayOfMonth(
-        value,
-        year,
-        month,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, year, month, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1228,11 +1176,7 @@ def inputIP(
 
     """
     validationFunc = lambda value: pysv.validateIP(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1267,13 +1211,7 @@ def inputRegex(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
     """
     validationFunc = lambda value: pysv.validateRegex(
-        value,
-        regex=regex,
-        flags=flags,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, regex=regex, flags=flags, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1308,11 +1246,7 @@ def inputRegexStr(
 
     """
     validationFunc = lambda value: pysv.validateRegexStr(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1361,11 +1295,7 @@ def inputURL(
     'mailto:al@inventwithpython.com'
     """
     validationFunc = lambda value: pysv.validateURL(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1636,11 +1566,7 @@ def inputFilename(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
     """
     validationFunc = lambda value: pysv.validateFilename(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1674,12 +1600,7 @@ def inputFilepath(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
     """
     validationFunc = lambda value: pysv.validateFilepath(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
-        mustExist=mustExist,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, mustExist=mustExist,
     )
 
     return _genericInput(
@@ -1720,11 +1641,7 @@ def inputEmail(
     'al@inventwithpython.com'
     """
     validationFunc = lambda value: pysv.validateEmail(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
     )
 
     return _genericInput(
@@ -1773,19 +1690,12 @@ def inputPassword(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters."""
 
     if mask is not None and len(mask) > 1:
-        raise PyInputPlusException(
-            "mask argument must be None, '', or a single-character string."
-        )
+        raise PyInputPlusException("mask argument must be None, '', or a single-character string.")
 
     pysv._validateGenericParameters(blank, strip, allowRegexes, blockRegexes)
 
     validationFunc = lambda value: pysv._prevalidationCheck(
-        value,
-        blank=blank,
-        strip=strip,
-        allowRegexes=allowRegexes,
-        blockRegexes=blockRegexes,
-        excMsg=None,
+        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes, excMsg=None,
     )[1]
 
     return _genericInput(
@@ -1835,5 +1745,6 @@ for functionName in (
     try:
         return pysv.%s(value, *args, **kwargs)
     except pysv.ValidationException as e:
-        raise ValidationException(str(e))""" % (functionName, functionName)
+        raise ValidationException(str(e))"""
+        % (functionName, functionName)
     )
