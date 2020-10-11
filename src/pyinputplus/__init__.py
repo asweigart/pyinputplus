@@ -15,7 +15,7 @@ from typing import Union, Any, Optional, Callable, Sequence, Pattern
 import pysimplevalidate as pysv  # type: ignore
 import stdiomask  # type: ignore
 
-__version__ = "0.2.11"  # type: str
+__version__ = "0.2.12"  # type: str
 
 
 class PyInputPlusException(Exception):
