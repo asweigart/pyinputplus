@@ -15,6 +15,12 @@ from typing import Union, Any, Optional, Callable, Sequence, Pattern
 import pysimplevalidate as pysv  # type: ignore
 import stdiomask  # type: ignore
 
+import gettext, os
+FOLDER_OF_THIS_FILE = os.path.dirname(os.path.abspath(__file__))
+enLang = gettext.translation('pyinputplus', localedir=os.path.join(FOLDER_OF_THIS_FILE, 'locale'), languages=['en'])
+enLang.install()
+# TODO - should i have a setLang() function?
+
 __version__ = "0.2.12"  # type: str
 
 
@@ -645,7 +651,7 @@ def inputChoice(
     )
 
     if prompt == "_default":
-        prompt = "Please select one of: %s\n" % (", ".join(choices))
+        prompt = _("Please select one of: %s\n") % (", ".join(choices))
 
     return _genericInput(
         prompt=prompt,
@@ -749,7 +755,7 @@ def inputMenu(
     )
 
     if prompt == "_default":
-        prompt = "Please select one of the following:\n"
+        prompt = _("Please select one of the following:\n")
 
     if numbered:
         prompt += "\n".join([str(i + 1) + ". " + choices[i] for i in range(len(choices))])
@@ -1311,8 +1317,8 @@ def inputURL(
 
 def inputYesNo(
     prompt="",
-    yesVal="yes",
-    noVal="no",
+    yesVal=None,
+    noVal=None,
     caseSensitive=False,
     default=None,
     blank=False,
@@ -1349,6 +1355,11 @@ def inputYesNo(
     >>> response
     'oui'
     """
+    if yesVal is None:
+        yesVal = _("yes")  # Use the local language "yes" word.
+    if noVal is None:
+        noVal = _("no")  # Use the local language "no" word.
+
     validationFunc = lambda value: pysv.validateYesNo(
         value,
         yesVal=yesVal,
@@ -1389,8 +1400,8 @@ def inputYesNo(
 
 def inputBool(
     prompt="",
-    trueVal="True",
-    falseVal="False",
+    trueVal=None,
+    falseVal=None,
     caseSensitive=False,
     default=None,
     blank=False,
@@ -1421,6 +1432,12 @@ def inputBool(
     >>> response
     False
     """
+
+    if trueVal is None:
+        trueVal = _("True")  # Use the local language "True" word.
+    if falseVal is None:
+        falseVal = _("False")  # Use the local language "False" word.
+
     validationFunc = lambda value: pysv.validateYesNo(
         value,
         yesVal=trueVal,

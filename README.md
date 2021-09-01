@@ -108,3 +108,8 @@ Input Functions
 * `inputDatetime()` - Same as `inputDate()`, except it handles dates and times. (This has several common formats by default.) Returns a `datetime.datetime` object.
 * `inputTime()` - Same as `inputDate()`, except it handles times. (This has several common formats by default.) Returns a `datetime.time` object.
 * `inputYesNo()` - Accepts a case-insensitive form of `'Yes'`, `'Y'`, `'No'`, or `'N'` and returns `'yes'` or `'no'`.
+
+Support
+-------
+
+If you find this project helpful and would like to support its development, [consider donating to its creator on Patreon](https://www.patreon.com/AlSweigart).
