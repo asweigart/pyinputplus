@@ -816,6 +816,11 @@ class test_main(unittest.TestCase):
 
         self._testValidationParameters(pyip.validateMonth)
 
+        for month_index_zero_indexed, month in enumerate('january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'):
+            assert pyip.validateMonth(month, returnNumber=True) == month_index_zero_indexed + 1
+
+        for month in ('january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'):
+            assert pyip.validateMonth(month, returnAbbreviation=True) == month[:3].title()
 
     def test_validateDayOfWeek(self):
         pyip.validateDayOfWeek('Monday') # Test that a valid value doesn't raise an exception.

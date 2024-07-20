@@ -1022,10 +1022,18 @@ def inputMonth(
     blockRegexes=None,
     applyFunc=None,
     postValidateApplyFunc=None,
+    returnNumber=False,
+    returnAbbreviation=False
 ):
-    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
+    # type: (str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable], bool, bool) -> Any
     """Prompts the user to enter a month name.
-    Returns a string of the selected month name in titlecase.
+    Returns a string of the selected month name in titlecase (unless
+     a. ``returnNumber`` is ``True``, in which case it returns the
+       number of the month, e.g. 1 for January, 2 for February, ...,
+       12 for December
+     b. ``returnAbbreviation`` is ``True``, in which case it returns the
+       three-letter abbreviation for the month, e.g. 'Jan' for January,
+       'Feb' for February, ..., 'Dec' for December)
 
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
@@ -1042,12 +1050,23 @@ def inputMonth(
     MARCH
     >>> response
     'March'
+    >>> response = pyip.inputMonth(returnNumber=True)
+    March
+    >>> response
+    3
+    >>> response = pyip.inputMonth(returnAbbreviation=True)
+    March
+    >>> response
+    'Mar'
     """
-
-    # TODO add returnNumber and returnAbbreviation parameters.
-
     validationFunc = lambda value: pysv.validateMonth(
-        value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
+        value,
+        blank=blank,
+        strip=strip,
+        allowRegexes=allowRegexes,
+        blockRegexes=blockRegexes,
+        returnNumber=returnNumber,
+        returnAbbreviation=returnAbbreviation,
     )
 
     return _genericInput(
