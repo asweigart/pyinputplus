@@ -197,7 +197,7 @@ def _genericInput(
                 continue
 
         # The previous call to _checkLimitAndTimeout() only happens when the
-        # user enteres invalid input. Now we should check for a timeout even if
+        # user enters invalid input. Now we should check for a timeout even if
         # the last input was valid.
         if timeout is not None and startTime + timeout < time.time():
             # It doesn't matter that the user entered valid input, they've
@@ -603,7 +603,7 @@ def inputChoice(
     Run ``help(pyinputplus.parameters)`` for an explanation of the common parameters.
 
     * ``choices`` (Sequence): A sequence of strings, one of which the user must enter.
-    * ``aseSensitive`` (bool): If ``True``, the user must enter a choice that matches the case of the string in choices. Defaults to False.
+    * ``caseSensitive`` (bool): If ``True``, the user must enter a choice that matches the case of the string in choices. Defaults to False.
 
     >>> import pyinputplus as pyip
     >>> response = pyip.inputChoice(['dog', 'cat'])
@@ -1090,7 +1090,7 @@ def inputDayOfWeek(
     'Friday'
     """
 
-    # TODO - add returnNumber and return abbreivation parameters.
+    # TODO - add returnNumber and returnAbbreviation parameters.
 
     validationFunc = lambda value: pysv.validateDayOfWeek(
         value, blank=blank, strip=strip, allowRegexes=allowRegexes, blockRegexes=blockRegexes,
@@ -1122,7 +1122,7 @@ def inputDayOfMonth(
     postValidateApplyFunc=None,
 ):
     # type: (int, int, str, Any, bool, Optional[float], Optional[int], Union[None, str, bool], Union[None, Sequence[Union[Pattern, str]]], Union[None, Sequence[Union[Pattern, str, Sequence[Union[Pattern, str]]]]], Optional[Callable], Optional[Callable]) -> Any
-    """Prompts the user to enter a numeric month from 1 to 28, 30, or 31
+    """Prompts the user to enter a numeric day of month from 1 to 28, 30, or 31
     (or 29 for leap years), depending on the given month and year.
     Returns the entered day as an integer.
 
